@@ -1,0 +1,21 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/crm-hackaton/src",
+  "monorepo": true,
+  "root": "apps/crm-hackaton",
+  "compilerOptions": {
+    "webpack": true,
+    "tsConfigPath": "apps/crm-hackaton/tsconfig.app.json"
+  },
+  "projects": {
+    "auth": {
+      "type": "application",
+      "root": "apps/auth",
+      "entryFile": "main",
+      "sourceRoot": "apps/auth/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/auth/tsconfig.app.json"
+      }
+    }
+  }
+}

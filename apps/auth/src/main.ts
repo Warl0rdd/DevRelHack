@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AuthModule } from './auth.module';
+import { AuthModule } from './auth/auth.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { config } from 'dotenv';
 config();
@@ -16,7 +16,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(swaggerPostfix, app, document);
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   await app.listen(3000);
 
   const url = await app.getUrl();

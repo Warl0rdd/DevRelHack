@@ -1,0 +1,15 @@
+{
+  "name": "devrelhack",
+  "version": "1.0.0",
+  "description": "CRM for DevRel 2.0 hackathon",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "devrelhack"
+  },
+  "author": "Alexandr Nikolaev && Ivan",
+  "license": "ISC"
+}

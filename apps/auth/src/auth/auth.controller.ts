@@ -4,13 +4,13 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import RegistrationDto from './dto/registration.dto';
 import RegistrationResponse from './dto/registration.response';
 
-@ApiTags('Hello world')
-@Controller()
+@ApiTags('Auth')
+@Controller('/api')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiOperation({ summary: 'registration' })
-  @Post()
+  @Post('/register')
   @ApiResponse({ type: RegistrationResponse })
   @HttpCode(201)
   registration(@Body() registrationDto: RegistrationDto) {

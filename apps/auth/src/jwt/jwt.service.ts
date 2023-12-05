@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
@@ -8,7 +8,6 @@ export default class JwtService {
 
   public generateToken(payload: string): string {
     const jwtSecret = this.configService.get('jwt');
-    const token = jwt.sign(payload, jwtSecret.secret);
-    return token;
+    return jwt.sign(payload, jwtSecret.secret);
   }
 }

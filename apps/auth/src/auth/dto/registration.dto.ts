@@ -16,6 +16,4 @@ export default class RegistrationDto {
     @IsString()
     @IsNotEmpty()
     public password: string
-
-
 }

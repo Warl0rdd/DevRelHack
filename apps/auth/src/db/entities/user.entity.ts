@@ -14,27 +14,25 @@ export default class User extends BaseEntity {
 
   @Column({
     length: 100,
-    unique: true,
-    nullable: false,
+    unique: true
   })
   email: string;
 
   @Column({
-    length: 255,
-    nullable: false,
+    length: 255
   })
   password: string;
 
   @Column({
     length: 100,
-    nullable: true,
+    nullable: true
   })
   fullName: string;
 
   // YYYY-MM-DD
   @Column({
     type: 'timestamptz',
-    nullable: true,
+    nullable: true
   })
   birthday: string;
 
@@ -44,7 +42,7 @@ export default class User extends BaseEntity {
   isActive: boolean;
 
   @Column({
-    nullable: true,
+    nullable: true
   })
   phoneNumber: string;
 
@@ -65,7 +63,7 @@ export default class User extends BaseEntity {
   // Path to pfp
   @Column({
     type: 'varchar',
-    nullable: true,
+    nullable: true
   })
   profilePic: string;
 }

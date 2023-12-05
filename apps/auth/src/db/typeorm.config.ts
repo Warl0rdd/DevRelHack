@@ -1,3 +1,5 @@
+import User from "../entity/user.entity";
+
 export const typeormConfig = (): any => {
   console.log({
     type: 'postgres',
@@ -6,6 +8,7 @@ export const typeormConfig = (): any => {
     database: process.env.DB_DATABASE,
     port: Number(process.env.DB_PORT),
     password: process.env.DB_PASSWORD,
+    entities: [User],
   });
   return {
     type: 'postgres',
@@ -14,5 +17,6 @@ export const typeormConfig = (): any => {
     database: process.env.DB_DATABASE,
     port: Number(process.env.DB_PORT),
     password: process.env.DB_PASSWORD,
+    entities: [User]
   };
 };

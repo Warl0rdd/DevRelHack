@@ -8,28 +8,19 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import HelloDto from './hello.dto';
-import HelloResponse from './hello.response';
+import RegistrationDto from "./dto/registration.dto";
+import RegistrationResponse from "./response/registration.response";
 
 @ApiTags('Hello world')
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: 'hello' })
-  @ApiResponse({ type: String })
-  @Get()
-  getHello(): string {
-    return this.authService.getHello();
-  }
-
-  @ApiOperation({ summary: 'hello' })
-  @ApiResponse({ type: HelloResponse })
+  @ApiOperation({summary: 'registration'})
   @Post()
-  @HttpCode(200)
-  postHello(@Body() helloDto: HelloDto): HelloResponse {
-    return {
-      helloAnother: helloDto.hello,
-    };
+  @ApiResponse({type: RegistrationResponse})
+  @HttpCode(201)
+  registration(@Body() registrationDto: RegistrationDto) {
+      return this.authService.create(registrationDto)
   }
 }

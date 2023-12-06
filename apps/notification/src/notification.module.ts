@@ -16,7 +16,11 @@ import { typeormConfig } from './config/typeorm.config';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => {
         const dbConfig = config.get('typeorm');
-        return { ...dbConfig, entities: [User], synchronize: true };
+        return {
+          ...dbConfig,
+          entities: [User],
+          synchronize: true,
+        };
       },
       inject: [ConfigService],
     }),

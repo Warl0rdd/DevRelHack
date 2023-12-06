@@ -6,10 +6,7 @@ import { unisenderConfig } from '../config/unisender.config';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ envFilePath: '.env.notification' }),
-    HttpModule.register(unisenderConfig()),
-  ],
+  imports: [HttpModule.register(unisenderConfig())],
   controllers: [EmailController],
   providers: [EmailService],
 })

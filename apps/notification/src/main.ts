@@ -21,4 +21,5 @@ async function bootstrap() {
   Logger.verbose(`Application: ${url}`);
   Logger.verbose(`Swagger: ${url}/${swaggerPostfix}`);
 }
+
 bootstrap();

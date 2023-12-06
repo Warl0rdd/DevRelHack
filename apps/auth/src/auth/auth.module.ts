@@ -7,13 +7,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import User from '../db/entities/user.entity';
 import { jwtConfig } from '../config/jwt.config';
+import {passwordConfig} from "../config/password.config";
 
 @Module({
   imports: [
     JwtModule,
     ConfigModule.forRoot({
       envFilePath: '.env',
-      load: [typeormConfig, jwtConfig],
+      load: [typeormConfig, jwtConfig, passwordConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

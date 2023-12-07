@@ -7,6 +7,7 @@ import RegistrationResponse from './dto/registration.response';
 import JwtService from '../jwt/jwt.service';
 import LoginDto from "./dto/login.dto";
 import LoginResponse from "./dto/login.response";
+import {DataSource} from "typeorm";
 import {InjectDataSource} from "@nestjs/typeorm";
 import UpdateDto from "./dto/update.dto";
 

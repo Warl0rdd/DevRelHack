@@ -5,6 +5,8 @@ import RegistrationDto from './dto/registration.dto';
 import RegistrationResponse from './dto/registration.response';
 import LoginDto from "./dto/login.dto";
 import LoginResponse from "./dto/login.response";
+import UpdateDto from "./dto/update.dto";
+import UpdateResponse from "./dto/update.response";
 
 @ApiTags('Auth')
 @Controller('/api/auth')
@@ -25,5 +27,16 @@ export class AuthController {
   @HttpCode(200)
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto)
+  }
+
+  @ApiOperation({
+    summary: 'update a user',
+    description: 'in a request body provide an instance of user with redacted fields (PROVIDE PASSWORD IN PLAIN TEXT)'
+  })
+  @Post('/update')
+  @ApiResponse({ type: UpdateResponse })
+  @HttpCode(200)
+  async update(@Body() updateDto: UpdateDto) {
+    return new UpdateResponse(await this.authService.update(updateDto))
   }
 }

@@ -5,23 +5,20 @@ import { DateTime } from 'luxon';
 import * as bcrypt from 'bcrypt';
 import RegistrationResponse from './dto/registration.response';
 import JwtService from '../jwt/jwt.service';
-import {ConfigService} from "@nestjs/config";
 import LoginDto from "./dto/login.dto";
 import LoginResponse from "./dto/login.response";
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService, private readonly configService: ConfigService) {}
+  constructor(private readonly jwtService: JwtService) {}
 
-  //TODO: fix
   async passwordToHash(pass: string): Promise<string> {
-    const passwordConfig = this.configService.get('password')
-    return bcrypt.hash(pass, passwordConfig.salt);
+    const salt = bcrypt.genSaltSync(10)
+    return bcrypt.hash(pass, salt)
   }
 
   async validatePassword(pass: string, user: User): Promise<boolean> {
-    const passwordConfig = this.configService.get('password')
-    return await bcrypt.hash(pass, passwordConfig.salt) === user.password
+    return bcrypt.compare(pass, user.password);
   }
 
   async create(dto: RegistrationDto): Promise<RegistrationResponse> {

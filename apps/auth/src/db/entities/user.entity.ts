@@ -53,7 +53,8 @@ export default class User extends BaseEntity {
   @Column({
     type: 'timestamptz',
     nullable: false,
-    name: 'registration_timestamp'
+    name: 'registration_timestamp',
+    update: false
   })
   registrationTimestamp: string;
 

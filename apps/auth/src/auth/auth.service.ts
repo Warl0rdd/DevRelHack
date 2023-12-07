@@ -84,4 +84,19 @@ export class AuthService {
 
     return updatedUser.raw[0]
   }
+
+  // True if deleted, False if not found
+  async delete(id: number): Promise<boolean> {
+     this.dataSource
+        .createQueryBuilder()
+        .delete()
+        .from(User)
+        .where(`id = ${id}`)
+        .execute()
+        .catch((err) => {
+            return false
+        })
+
+    return true
+  }
 }

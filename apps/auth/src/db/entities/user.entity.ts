@@ -25,7 +25,8 @@ export default class User extends BaseEntity {
 
   @Column({
     length: 100,
-    nullable: true
+    nullable: true,
+    name: 'full_name'
   })
   fullName: string;
 
@@ -38,11 +39,13 @@ export default class User extends BaseEntity {
 
   @Column({
     default: true,
+    name: 'is_active'
   })
   isActive: boolean;
 
   @Column({
-    nullable: true
+    nullable: true,
+    name: 'phone_number'
   })
   phoneNumber: string;
 
@@ -50,6 +53,8 @@ export default class User extends BaseEntity {
   @Column({
     type: 'timestamptz',
     nullable: false,
+    name: 'registration_timestamp',
+    update: false
   })
   registrationTimestamp: string;
 
@@ -63,7 +68,8 @@ export default class User extends BaseEntity {
   // Path to pfp
   @Column({
     type: 'varchar',
-    nullable: true
+    nullable: true,
+    name: 'profile_pic'
   })
   profilePic: string;
 }

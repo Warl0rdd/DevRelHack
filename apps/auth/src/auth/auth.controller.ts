@@ -1,12 +1,21 @@
-import {Body, Controller, Delete, HttpCode, HttpException, HttpStatus, Param, Post} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import RegistrationDto from './dto/registration.dto';
 import RegistrationResponse from './dto/registration.response';
-import LoginDto from "./dto/login.dto";
-import LoginResponse from "./dto/login.response";
-import UpdateDto from "./dto/update.dto";
-import UpdateResponse from "./dto/update.response";
+import LoginDto from './dto/login.dto';
+import LoginResponse from './dto/login.response';
+import UpdateDto from './dto/update.dto';
+import UpdateResponse from './dto/update.response';
 
 @ApiTags('Auth')
 @Controller('/api/auth')
@@ -26,18 +35,19 @@ export class AuthController {
   @ApiResponse({ type: LoginResponse })
   @HttpCode(200)
   login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto)
+    return this.authService.login(loginDto);
   }
 
   @ApiOperation({
     summary: 'update a user',
-    description: 'in a request body provide an instance of user with redacted fields (PROVIDE PASSWORD IN PLAIN TEXT)'
+    description:
+      'in a request body provide an instance of user with redacted fields (PROVIDE PASSWORD IN PLAIN TEXT)',
   })
   @Post('/update')
   @ApiResponse({ type: UpdateResponse })
   @HttpCode(200)
   async update(@Body() updateDto: UpdateDto) {
-    return new UpdateResponse(await this.authService.update(updateDto))
+    return new UpdateResponse(await this.authService.update(updateDto));
   }
 
   //TODO: fix bug (always responds with 204, even if there is an error)
@@ -45,7 +55,9 @@ export class AuthController {
   @Delete('/delete/:id')
   @HttpCode(204)
   async delete(@Param('id') id: number) {
-    const success = this.authService.delete(id)
-    if(!success) throw new HttpException('User not found', HttpStatus.BAD_REQUEST)
+    const success = await this.authService.delete(id);
+    console.log(success);
+    if (!success)
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
   }
 }

@@ -50,7 +50,6 @@ export class AuthController {
     return new UpdateResponse(await this.authService.update(updateDto));
   }
 
-  //TODO: fix bug (always responds with 204, even if there is an error)
   @ApiOperation({ summary: 'delete a user' })
   @Delete('/delete/:id')
   @HttpCode(204)

@@ -1,4 +1,11 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum Position {
   DEVELOPER = 'developer',
@@ -14,49 +21,38 @@ export default class User extends BaseEntity {
 
   @Column({
     length: 100,
-    unique: true
+    unique: true,
   })
   email: string;
 
-  @Column({
-    length: 255
-  })
+  @Column()
   password: string;
 
   @Column({
     length: 100,
     nullable: true,
-    name: 'full_name'
+    name: 'full_name',
   })
   fullName: string;
 
   // YYYY-MM-DD
   @Column({
     type: 'timestamptz',
-    nullable: true
+    nullable: true,
   })
   birthday: string;
 
   @Column({
     default: true,
-    name: 'is_active'
+    name: 'is_active',
   })
   isActive: boolean;
 
   @Column({
     nullable: true,
-    name: 'phone_number'
+    name: 'phone_number',
   })
   phoneNumber: string;
-
-  // YYYY-MM-DD HH:MM:SS
-  @Column({
-    type: 'timestamptz',
-    nullable: false,
-    name: 'registration_timestamp',
-    update: false
-  })
-  registrationTimestamp: string;
 
   @Column({
     type: 'enum',
@@ -69,7 +65,13 @@ export default class User extends BaseEntity {
   @Column({
     type: 'varchar',
     nullable: true,
-    name: 'profile_pic'
+    name: 'profile_pic',
   })
   profilePic: string;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  public created;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  public updated;
 }

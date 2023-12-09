@@ -1,26 +1,26 @@
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AuthModule } from './auth/auth.module';
-import { Logger, ValidationPipe } from '@nestjs/common';
 import { config } from 'dotenv';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AuthModule);
+  const user = 'user';
+  const password = 'password';
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    AuthModule,
+    {
+      transport: Transport.RMQ,
+      options: {
+        urls: [`amqp://${user}:${password}@localhost:5672`],
+        queue: 'auth_queue',
+        queueOptions: {
+          durable: false,
+        },
+      },
+    },
+  );
 
-  const swaggerPostfix = 'api/swagger';
-  const config = new DocumentBuilder()
-    .setTitle('Auth Swagger')
-    .setDescription('Auth api')
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup(swaggerPostfix, app, document);
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-  await app.listen(3000);
-
-  const url = await app.getUrl();
-  Logger.verbose(`Application: ${url}`);
-  Logger.verbose(`Swagger: ${url}/${swaggerPostfix}`);
+  await app.listen();
 }
 bootstrap();

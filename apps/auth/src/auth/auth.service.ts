@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import User from '../db/entities/user.entity';
 import RegistrationDto from './dto/registration.dto';
 import { DateTime } from 'luxon';
@@ -6,10 +11,15 @@ import * as bcrypt from 'bcrypt';
 import RegistrationResponse from './dto/registration.response';
 import JwtService from '../jwt/jwt.service';
 import LoginDto from './dto/login.dto';
-import LoginResponse from './dto/login.response';
 import { DataSource } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import UpdateDto from './dto/update.dto';
+import { IJwtPairTokens } from '../jwt/jwt.interface';
+import {
+  JWT_EXPIRE_ACCESS_TOKEN,
+  JWT_EXPIRE_REFRESH_TOKEN,
+} from '../jwt/jwt.const';
+import AddUserDto from './dto/add-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -27,14 +37,12 @@ export class AuthService {
     return bcrypt.compare(pass, user.password);
   }
 
-  async create(dto: RegistrationDto): Promise<RegistrationResponse> {
+  async addUser(dto: AddUserDto): Promise<RegistrationResponse> {
     let user = new User();
     user.email = dto.email;
-    user.password = await this.passwordToHash(dto.password);
-    user.registrationTimestamp = DateTime.now().toISO();
+    user.password = 'dasdsasdada';
     const userCreated = await User.save(user);
 
-    const jwt = this.jwtService.generateToken(userCreated);
     return {
       user: {
         id: userCreated.id,
@@ -46,11 +54,10 @@ export class AuthService {
         position: userCreated.position,
         profilePic: userCreated.profilePic,
       },
-      token: jwt,
     };
   }
 
-  async login(dto: LoginDto): Promise<LoginResponse> {
+  async login(dto: LoginDto): Promise<IJwtPairTokens> {
     const user = await User.findOne({
       where: {
         email: dto.email,
@@ -60,10 +67,13 @@ export class AuthService {
     if (user === null || !(await this.validatePassword(dto.password, user)))
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
 
-    return {
-      user: user,
-      token: this.jwtService.generateToken(user),
-    };
+    const tokens = this.jwtService.issuePairTokens({
+      id: user.id,
+      email: user.email,
+      position: user.position,
+    });
+
+    return tokens;
   }
 
   async update(dto: UpdateDto): Promise<User> {
@@ -96,5 +106,24 @@ export class AuthService {
     await user.remove();
 
     return true;
+  }
+
+  async refreshTokens(dto: any): Promise<IJwtPairTokens | never> {
+    const { access_token, refresh_token } = dto;
+
+    const isValid = this.jwtService.verify(refresh_token);
+    if (!isValid) throw new BadRequestException('TOKEN_ERROR');
+
+    const body: any = this.jwtService.decode(access_token);
+    if (!body) throw new BadRequestException('TOKEN_ERROR');
+
+    return this.jwtService.issuePairTokens(
+      {
+        sub: body.sub,
+        role: body.role,
+      },
+      JWT_EXPIRE_ACCESS_TOKEN,
+      JWT_EXPIRE_REFRESH_TOKEN,
+    );
   }
 }

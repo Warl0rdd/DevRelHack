@@ -4,6 +4,7 @@ import {
   PROVIDE_CONNECTION_STRING,
   PROVIDE_REPLY_QUEUES,
 } from './rabbit-client.const';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({})
 export class RabbitReplyConsumerModule {
@@ -13,6 +14,7 @@ export class RabbitReplyConsumerModule {
   ): DynamicModule {
     return {
       module: RabbitReplyConsumerModule,
+      imports: [EventEmitterModule.forRoot()],
       providers: [
         DirectReplyConsumerService,
         {

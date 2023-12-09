@@ -35,6 +35,12 @@
       ],
       "@app/rabbit-reply-consumer/*": [
         "libs/rabbit-reply-consumer/src/*"
+      ],
+      "@app/common": [
+        "libs/common/src"
+      ],
+      "@app/common/*": [
+        "libs/common/src/*"
       ]
     }
   }

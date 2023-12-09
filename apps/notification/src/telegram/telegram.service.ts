@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import * as TelegramBot from 'node-telegram-bot-api';
 import { TelegramAccountStatusEnum } from './telegram.account-status.enum';
 import User from '../db/entities/user.entity';
+import TelegramAccount from '../db/entities/telegram-account.entity';
+import { In } from 'typeorm';
 
 @Injectable()
 export default class TelegramService {
@@ -39,17 +41,50 @@ export default class TelegramService {
     this.bot.startPolling();
   }
 
-  public async requestTelegramConfirm(email: string, telegramName: string) {
-    const user = await User.findOne({ where: { email } });
-    if (!user) return;
-    user.telegramName = telegramName;
-    user.telegramStatus = TelegramAccountStatusEnum.NEW;
-    user.telegramConfirmCode = '12345';
-    await user.save();
+  public async sendMessageMultipleUsersByEmail(
+    emails: string[],
+    message: string,
+  ) {
+    const telegramInfo = await TelegramAccount.find({
+      where: {
+        user: {
+          email: In(emails),
+        },
+      },
+    });
+    if (!telegramInfo.length) return;
+
+    for (const info of telegramInfo) {
+      await this.bot.sendMessage(info.telegramChatId, message);
+    }
   }
 
-  public async sendMessage(telegramName: string, message: string) {
-    const chatId = 'TODO: Get chatid';
+  public async sendMessageByUserEmail(email: string, message: string) {
+    const telegramInfo = await TelegramAccount.findOne({
+      where: {
+        user: {
+          email: email,
+        },
+      },
+    });
+    if (!telegramInfo) return;
+
+    const chatId = telegramInfo.telegramChatId;
+    await this.bot.sendMessage(chatId, message);
+  }
+
+  public async sendMessageByTelegramname(
+    telegramName: string,
+    message: string,
+  ) {
+    const telegramInfo = await TelegramAccount.findOne({
+      where: {
+        telegramName,
+      },
+    });
+    if (!telegramInfo) return;
+
+    const chatId = telegramInfo.telegramChatId;
     await this.bot.sendMessage(chatId, message);
   }
 
@@ -59,7 +94,7 @@ export default class TelegramService {
     chatId: number,
     code: string,
   ) {
-    const existsTelegramAccount = await User.findOne({
+    const existsTelegramAccount = await TelegramAccount.findOne({
       where: { telegramName },
     });
 
@@ -71,12 +106,13 @@ export default class TelegramService {
       return false;
 
     existsTelegramAccount.telegramStatus = TelegramAccountStatusEnum.CONFIRMED;
+    existsTelegramAccount.telegramChatId = chatId.toString();
     existsTelegramAccount.save();
     return true;
   }
 
   private async isTelegramNameConfirmed(telegramName: string) {
-    const existsTelegramAccount = await User.findOne({
+    const existsTelegramAccount = await TelegramAccount.findOne({
       where: {
         telegramName,
         telegramStatus: TelegramAccountStatusEnum.CONFIRMED,
@@ -86,7 +122,7 @@ export default class TelegramService {
   }
 
   private async isTelegramNamePending(telegramName: string) {
-    const existsTelegramAccount = await User.findOne({
+    const existsTelegramAccount = await TelegramAccount.findOne({
       where: { telegramName, telegramStatus: TelegramAccountStatusEnum.NEW },
     });
     return !!existsTelegramAccount;

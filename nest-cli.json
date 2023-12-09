@@ -25,6 +25,24 @@
       "compilerOptions": {
         "tsConfigPath": "apps/notification/tsconfig.app.json"
       }
+    },
+    "rabbit-producer": {
+      "type": "library",
+      "root": "libs/rabbit-producer",
+      "entryFile": "index",
+      "sourceRoot": "libs/rabbit-producer/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/rabbit-producer/tsconfig.lib.json"
+      }
+    },
+    "rabbit-reply-consumer": {
+      "type": "library",
+      "root": "libs/rabbit-reply-consumer",
+      "entryFile": "index",
+      "sourceRoot": "libs/rabbit-reply-consumer/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/rabbit-reply-consumer/tsconfig.lib.json"
+      }
     }
   }
 }

@@ -16,6 +16,42 @@
       "compilerOptions": {
         "tsConfigPath": "apps/auth/tsconfig.app.json"
       }
+    },
+    "notification": {
+      "type": "application",
+      "root": "apps/notification",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification/tsconfig.app.json"
+      }
+    },
+    "rabbit-producer": {
+      "type": "library",
+      "root": "libs/rabbit-producer",
+      "entryFile": "index",
+      "sourceRoot": "libs/rabbit-producer/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/rabbit-producer/tsconfig.lib.json"
+      }
+    },
+    "rabbit-reply-consumer": {
+      "type": "library",
+      "root": "libs/rabbit-reply-consumer",
+      "entryFile": "index",
+      "sourceRoot": "libs/rabbit-reply-consumer/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/rabbit-reply-consumer/tsconfig.lib.json"
+      }
+    },
+    "common": {
+      "type": "library",
+      "root": "libs/common",
+      "entryFile": "index",
+      "sourceRoot": "libs/common/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/common/tsconfig.lib.json"
+      }
     }
   }
 }

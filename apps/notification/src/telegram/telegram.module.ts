@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import TelegramService from './telegram.service';
 import TelegramConsumer from './telegram.consumer';
-import RabbitmqPublisherService from '../transport/rabbitmq.publisher.service';
 
 @Module({
+  imports: [],
   controllers: [TelegramConsumer],
-  providers: [TelegramService, RabbitmqPublisherService],
+  providers: [TelegramService],
 })
 export default class TelegramModule {}

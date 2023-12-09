@@ -91,7 +91,13 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/"
-    ]
+      "<rootDir>/apps/",
+      "<rootDir>/libs/"
+    ],
+    "moduleNameMapper": {
+      "^@app/rabbit-client(|/.*)$": "<rootDir>/libs/rabbit-client/src/$1",
+      "^@app/rabbit-producer(|/.*)$": "<rootDir>/libs/rabbit-producer/src/$1",
+      "^@app/rabbit-reply-consumer(|/.*)$": "<rootDir>/libs/rabbit-reply-consumer/src/$1"
+    }
   }
 }

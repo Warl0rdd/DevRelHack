@@ -5,6 +5,7 @@ import {
   PROVIDE_CONNECTION_STRING,
   PROVIDE_REPLY_QUEUES,
 } from './rabbit-client.const';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class DirectReplyConsumerService {
@@ -23,6 +24,7 @@ export class DirectReplyConsumerService {
     @Inject(PROVIDE_REPLY_QUEUES) replyQueues: string[],
     @Inject(PROVIDE_CONNECTION_STRING)
     connectionString: string,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.init(connectionString, replyQueues);
   }
@@ -31,8 +33,13 @@ export class DirectReplyConsumerService {
     await this.consumerChannel.consume(
       queue,
       (msg) => {
-        console.log('received reply on request');
-        console.log(msg.content);
+        Logger.verbose(
+          `Received message: ${msg.content}. Queue: ${queue}. Correlation id: ${msg.properties.correlationId}`,
+        );
+        this.eventEmitter.emit(
+          msg.properties.correlationId,
+          msg.content.toString(),
+        );
       },
       {
         noAck: true,

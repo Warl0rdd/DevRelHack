@@ -1,12 +1,12 @@
 import {Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post} from '@nestjs/common';
 import { ApiGatewayService } from './api-gateway.service';
 import {ApiOperation, ApiResponse} from "@nestjs/swagger";
-import RegistrationResponse from "./dto/registration.response";
-import RegistrationDto from "./dto/registration.dto";
-import LoginResponse from "./dto/login.response";
-import LoginDto from "./dto/login.dto";
-import UpdateResponse from "./dto/update.response";
-import UpdateDto from "./dto/update.dto";
+import RegistrationResponse from "./dto/auth/registration.response";
+import RegistrationDto from "./dto/auth/registration.dto";
+import LoginResponse from "./dto/auth/login.response";
+import LoginDto from "./dto/auth/login.dto";
+import UpdateResponse from "./dto/auth/update.response";
+import UpdateDto from "./dto/auth/update.dto";
 
 @Controller()
 export class ApiGatewayController {

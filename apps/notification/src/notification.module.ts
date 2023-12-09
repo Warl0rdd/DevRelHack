@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import User from './db/entities/user.entity';
 import { typeormConfig } from './config/typeorm.config';
+import { RabbitReplyConsumerModule } from '../../../libs/rabbit-reply-consumer/src';
+import { RabbitProducerModule } from '../../../libs/rabbit-producer/src';
 
 @Module({
   imports: [
@@ -26,6 +28,10 @@ import { typeormConfig } from './config/typeorm.config';
     }),
     EmailModule,
     TelegramModule,
+    RabbitReplyConsumerModule.forRoot(`amqp://user:password@localhost:5672`, [
+      'notification_queue.reply',
+    ]),
+    RabbitProducerModule.forRoot(`amqp://user:password@localhost:5672`),
   ],
 })
 export class NotificationModule {}

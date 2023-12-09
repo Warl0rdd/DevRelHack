@@ -24,6 +24,7 @@
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^8.0.0",
+    "@nestjs/event-emitter": "^2.0.3",
     "@nestjs/microservices": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/swagger": "^7.1.16",
@@ -49,6 +50,7 @@
     "@nestjs/cli": "^8.0.0",
     "@nestjs/schematics": "^8.0.0",
     "@nestjs/testing": "^8.4.7",
+    "@types/amqplib": "^0.10.4",
     "@types/bcrypt": "^5.0.2",
     "@types/crypto-js": "^4.2.1",
     "@types/express": "^4.17.13",
@@ -90,7 +92,13 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/"
-    ]
+      "<rootDir>/apps/",
+      "<rootDir>/libs/"
+    ],
+    "moduleNameMapper": {
+      "^@app/rabbit-client(|/.*)$": "<rootDir>/libs/rabbit-client/src/$1",
+      "^@app/rabbit-producer(|/.*)$": "<rootDir>/libs/rabbit-producer/src/$1",
+      "^@app/rabbit-reply-consumer(|/.*)$": "<rootDir>/libs/rabbit-reply-consumer/src/$1"
+    }
   }
 }

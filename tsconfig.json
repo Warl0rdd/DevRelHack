@@ -17,6 +17,25 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "paths": {}
+    "paths": {
+      "@app/rabbit-client": [
+        "libs/rabbit-client/src"
+      ],
+      "@app/rabbit-client/*": [
+        "libs/rabbit-client/src/*"
+      ],
+      "@app/rabbit-producer": [
+        "libs/rabbit-producer/src"
+      ],
+      "@app/rabbit-producer/*": [
+        "libs/rabbit-producer/src/*"
+      ],
+      "@app/rabbit-reply-consumer": [
+        "libs/rabbit-reply-consumer/src"
+      ],
+      "@app/rabbit-reply-consumer/*": [
+        "libs/rabbit-reply-consumer/src/*"
+      ]
+    }
   }
 }

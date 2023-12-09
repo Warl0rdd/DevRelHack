@@ -8,48 +8,38 @@ import {
 import { RabbitProducerService } from '../../../../libs/rabbit-producer/src';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
+import {
+  NotificationServiceMessagePattern,
+  getDataFromRMQContext,
+} from '../../../../libs/common/src';
+import TelegramService from './telegram.service';
 
 @Controller()
 export default class TelegramConsumer {
   constructor(
     private readonly producer: RabbitProducerService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly telegramService: TelegramService,
   ) {}
 
-  @MessagePattern('telegram')
-  getNotifications(@Ctx() context: RmqContext, @Payload() data: any) {
-    const message = (context.getMessage().content as Buffer).toString();
-    Logger.verbose(`Message consumed ${message}`);
-    if (context.getMessage().properties.replyTo) {
-      Logger.verbose(
-        `Should reply to message: ${context.getMessage().properties.replyTo}`,
-      );
-      Logger.verbose(
-        `Correlation id: ${JSON.stringify(context.getMessage().properties)}`,
-      );
-      this.producer.reply({
-        data: { test: 1 },
-        replyQueue: context.getMessage().properties.replyTo,
-        correlationId: context.getMessage().properties.correlationId,
-      });
-    }
+  @MessagePattern(NotificationServiceMessagePattern.telegramSingle)
+  async sendMessageSingleUser(@Ctx() context: RmqContext) {
+    const data = getDataFromRMQContext<{
+      email: string;
+      message: string;
+    }>(context);
+    await this.telegramService.sendMessageByUserEmail(data.email, data.message);
   }
 
-  @MessagePattern('test')
-  testReplyTo(@Ctx() context: RmqContext, @Payload() data: any) {
-    const message = (context.getMessage().content as Buffer).toString();
-    Logger.verbose(`Message consumed ${message}`);
-    const uuid = randomUUID();
-    this.producer.produce({
-      data: { test: 1 },
-      pattern: 'telegram',
-      queue: 'notification_queue',
-      reply: { replyTo: 'notification_queue.reply', correlationId: uuid },
-    });
-
-    // Received reply here from eventemitter
-    this.eventEmitter.once(uuid, (data) => {
-      console.log('received reply!', JSON.parse(data));
-    });
+  @MessagePattern(NotificationServiceMessagePattern.telegramMultiple)
+  async sendMessageMultipleUsers(@Ctx() context: RmqContext) {
+    const data = getDataFromRMQContext<{
+      emails: string[];
+      message: string;
+    }>(context);
+    await this.telegramService.sendMessageMultipleUsersByEmail(
+      data.emails,
+      data.message,
+    );
   }
 }

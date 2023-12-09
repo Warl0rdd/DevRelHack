@@ -1,5 +1,12 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { TelegramAccountStatusEnum } from '../../telegram/telegram.account-status.enum';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import TelegramAccount from './telegram-account.entity';
 
 @Entity('user')
 export default class User extends BaseEntity {
@@ -12,12 +19,6 @@ export default class User extends BaseEntity {
   })
   email: string;
 
-  @Column({ nullable: true, name: 'telegram_name' })
-  telegramName?: string;
-
-  @Column({ type: String, nullable: true, name: 'telegram_status' })
-  telegramStatus?: TelegramAccountStatusEnum;
-
-  @Column({ type: String, nullable: true, name: 'telegram_confirm_code' })
-  telegramConfirmCode?: string;
+  @OneToOne(() => TelegramAccount)
+  telegramAccount?: TelegramAccount;
 }

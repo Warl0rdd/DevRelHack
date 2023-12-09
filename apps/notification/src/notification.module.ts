@@ -7,6 +7,8 @@ import User from './db/entities/user.entity';
 import { typeormConfig } from './config/typeorm.config';
 import { RabbitReplyConsumerModule } from '../../../libs/rabbit-reply-consumer/src';
 import { RabbitProducerModule } from '../../../libs/rabbit-producer/src';
+import TelegramAccount from './db/entities/telegram-account.entity';
+import UserModule from './user/user.module';
 
 @Module({
   imports: [
@@ -20,18 +22,19 @@ import { RabbitProducerModule } from '../../../libs/rabbit-producer/src';
         const dbConfig = config.get('typeorm');
         return {
           ...dbConfig,
-          entities: [User],
+          entities: [User, TelegramAccount],
           synchronize: true,
         };
       },
       inject: [ConfigService],
     }),
-    EmailModule,
-    TelegramModule,
     RabbitReplyConsumerModule.forRoot(`amqp://user:password@localhost:5672`, [
       'notification_queue.reply',
     ]),
     RabbitProducerModule.forRoot(`amqp://user:password@localhost:5672`),
+    EmailModule,
+    TelegramModule,
+    UserModule,
   ],
 })
 export class NotificationModule {}

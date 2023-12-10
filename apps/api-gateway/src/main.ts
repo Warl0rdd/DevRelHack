@@ -5,16 +5,17 @@ import {Logger} from "@nestjs/common";
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayAuthModule);
-  await app.listen(3000);
 
-  const swaggerPostfix = 'api/swagger';
+  const swaggerPostfix = 'swagger';
   const config = new DocumentBuilder()
-      .setTitle('Auth Swagger')
-      .setDescription('Auth api')
+      .setTitle('API Documentation')
+      .setDescription('Auth api + Notification (not implemented yet)')
       .setVersion('1.0')
       .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(swaggerPostfix, app, document);
+
+  await app.listen(3000);
 
   const url = await app.getUrl();
   Logger.verbose(`Swagger: ${url}/${swaggerPostfix}`);

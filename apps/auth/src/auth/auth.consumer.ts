@@ -1,37 +1,125 @@
-import {Controller, Logger} from "@nestjs/common";
-import {AuthService} from "./auth.service";
-import {RabbitProducerService} from "@app/rabbit-producer";
-import {Ctx, MessagePattern, Payload, RmqContext} from "@nestjs/microservices";
-import RegistrationDto from "./dto/registration.dto";
-import {getCorrelationIdFromRMQContext, getDataFromRMQContext} from "@app/common";
+import { Controller } from '@nestjs/common';
+import { Ctx, MessagePattern, RmqContext } from '@nestjs/microservices';
+import {
+  AuthServiceMessagePattern,
+  getCorrelationIdFromRMQContext,
+  getDataFromRMQContext,
+  getReplyToFromRMQContext,
+} from '../../../../libs/common/src';
+import { AuthService } from './auth.service';
+import LoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/login/login.request.message-data';
+import { RabbitProducerService } from '../../../../libs/rabbit-producer/src';
+import AddUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/add-user/add-user.request.message-data';
+import RefreshTokenRequestMessageData from '../../../../libs/common/src/dto/auth-service/refresh-token/refresh-token.request.message-data';
+import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.request.message-data';
+import BlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/block-user/block-user.request.message-data copy';
+import UnBlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/unblock-user/unblock-user.request.message-data';
 
 @Controller()
 export default class AuthConsumer {
-    replyQueue = 'auth_queue.reply'
+  constructor(
+    private readonly authService: AuthService,
+    private readonly producer: RabbitProducerService,
+  ) {}
 
-    constructor(
-        private readonly authService: AuthService,
-        private readonly rabbitProducer: RabbitProducerService
-    ) {}
+  @MessagePattern(AuthServiceMessagePattern.login)
+  public async login(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<LoginRequestMessageData>(ctx);
+    const result = await this.authService.login(data);
 
-    @MessagePattern('register')
-    async register(@Ctx() ctx: RmqContext) {
-        Logger.verbose(`Received message, data: ${getDataFromRMQContext(ctx)}`)
-        this.authService.create(getDataFromRMQContext(ctx))
-            .then((created) => {
-                this.rabbitProducer.reply({
-                    data: created,
-                    replyQueue: this.replyQueue,
-                    correlationId: getCorrelationIdFromRMQContext(ctx)
-                })
-            })
-            .catch((err) => {
-                Logger.error(err)
-                this.rabbitProducer.reply({
-                    data: err,
-                    replyQueue: this.replyQueue,
-                    correlationId: getCorrelationIdFromRMQContext(ctx)
-                })
-            })
-    }
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.refreshTokens)
+  public async refreshTokens(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<RefreshTokenRequestMessageData>(ctx);
+    const result = await this.authService.refreshTokens(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.updateProfile)
+  public async updateProfile(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<UpdateUserRequestMessageData>(ctx);
+    const result = await this.authService.update(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.addUser)
+  public async addUser(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<AddUserRequestMessageData>(ctx);
+    const result = await this.authService.addUser(data);
+    console.log(result);
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.blockUser)
+  public async blockUser(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<BlockUserRequestMessageData>(ctx);
+    const result = await this.authService.blockUser(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.unblockUser)
+  public async unblockUser(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<UnBlockUserRequestMessageData>(ctx);
+    const result = await this.authService.unblockUser(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  // @MessagePattern(AuthServiceMessagePattern.deleteUser)
+  // public async deleteUser(@Ctx() ctx: RmqContext) {
+  //   // TODO
+  // }
 }

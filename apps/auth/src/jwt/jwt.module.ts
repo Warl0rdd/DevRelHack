@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
-import JwtService from './jwt.service';
-import { ConfigModule } from '@nestjs/config';
+import JwtTokenService from './jwt.service';
+import { PROVIDE_JWT_SECRET } from './jwt.const';
 
 @Module({
-  imports: [ConfigModule],
-  providers: [JwtService],
-  exports: [JwtService],
+  imports: [],
+  providers: [
+    JwtTokenService,
+    {
+      useValue: 'secret',
+      provide: PROVIDE_JWT_SECRET,
+    },
+  ],
+  exports: [JwtTokenService],
 })
-export default class JwtModule {}
+export default class JwtTokenModule {}

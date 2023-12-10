@@ -7,6 +7,8 @@ import {
 } from '../../../../libs/common/src';
 import EmailMultipleSendDto from './dto/email.send-multiple.dto';
 import EmailSendDto from './dto/email.send.dto';
+import MailSingleRequestMessageData from '../../../../libs/common/src/dto/notification-service/mail-single/mail-single.request.dto';
+import MailMultipleRequestMessageData from '../../../../libs/common/src/dto/notification-service/mail-multiple/mail-multiple.request.dto';
 
 @Controller()
 export default class EmailConsumer {
@@ -14,13 +16,13 @@ export default class EmailConsumer {
 
   @MessagePattern(NotificationServiceMessagePattern.mailSingle)
   sendEmailSingle(@Ctx() ctx: RmqContext) {
-    const data = getDataFromRMQContext<EmailSendDto>(ctx);
+    const data = getDataFromRMQContext<MailSingleRequestMessageData>(ctx);
     return this.emailService.sendEmail(data);
   }
 
   @MessagePattern(NotificationServiceMessagePattern.mailMultiple)
   sendEmailMultiple(@Ctx() ctx: RmqContext) {
-    const data = getDataFromRMQContext<EmailMultipleSendDto>(ctx);
+    const data = getDataFromRMQContext<MailMultipleRequestMessageData>(ctx);
     return this.emailService.sendEmails(data);
   }
 }

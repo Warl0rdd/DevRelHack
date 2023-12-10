@@ -1,4 +1,4 @@
-export default class LoginResponsetMessageData {
+export default class LoginResponseMessageData {
   public accessToken: string;
 
   public refreshToken: string;

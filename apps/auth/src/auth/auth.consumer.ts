@@ -14,7 +14,6 @@ import RefreshTokenRequestMessageData from '../../../../libs/common/src/dto/auth
 import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.request.message-data';
 import BlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/block-user/block-user.request.message-data copy';
 import UnBlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/unblock-user/unblock-user.request.message-data';
-import AddUserMultipleRequestMessageData from '../../../../libs/common/src/dto/auth-service/add-user-multiple/add-user-multiple.request.message-data';
 
 @Controller()
 export default class AuthConsumer {

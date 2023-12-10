@@ -6,15 +6,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserPosition } from '../../../../../libs/common/src/enum/user.position.enum';
 
-export enum Position {
-  DEVELOPER = 'developer',
-  TESTER = 'tester',
-  DEVREL = 'devrel',
-  USER = 'user',
-}
-
-@Entity('user')
+@Entity('db_users')
 export default class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -56,10 +50,10 @@ export default class User extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: Position,
-    default: Position.USER,
+    enum: UserPosition,
+    default: UserPosition.USER,
   })
-  position: Position;
+  position: UserPosition;
 
   // Path to pfp
   @Column({

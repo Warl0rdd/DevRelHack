@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import JwtModule from '../jwt/jwt.module';
 import { typeormConfig } from '../config/typeorm.config';
@@ -7,12 +6,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import User from '../db/entities/user.entity';
 import { jwtConfig } from '../config/jwt.config';
+import AuthConsumer from './auth.consumer';
+import { RabbitProducerModule } from '../../../../libs/rabbit-producer/src';
 
 @Module({
   imports: [
     JwtModule,
     ConfigModule.forRoot({
-      envFilePath: '.env',
+      envFilePath: '.env.auth',
       load: [typeormConfig, jwtConfig],
     }),
     TypeOrmModule.forRootAsync({
@@ -23,8 +24,9 @@ import { jwtConfig } from '../config/jwt.config';
       },
       inject: [ConfigService],
     }),
+    RabbitProducerModule.forRoot('amqp://user:password@localhost:5672'),
   ],
-  controllers: [AuthController],
+  controllers: [AuthConsumer],
   providers: [AuthService],
 })
 export class AuthModule {}

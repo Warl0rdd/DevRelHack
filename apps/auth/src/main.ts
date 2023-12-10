@@ -1,8 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
-import { config } from 'dotenv';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-config();
 
 async function bootstrap() {
   const user = 'user';

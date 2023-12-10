@@ -43,8 +43,8 @@ export default class JwtTokenService {
     expireRefresh?: number,
   ): IJwtPairTokens {
     return {
-      access_token: this.issueAccessToken(payload, expireAccess),
-      refresh_token: this.issueRefreshToken(payload, expireRefresh),
+      accessToken: this.issueAccessToken(payload, expireAccess),
+      refreshToken: this.issueRefreshToken(payload, expireRefresh),
     };
   }
 

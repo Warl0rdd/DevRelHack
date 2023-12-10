@@ -5,6 +5,8 @@ import {
   getDataFromRMQContext,
 } from '../../../../libs/common/src';
 import UserService from './user.service';
+import UserRegisteredRequest from '../../../../libs/common/src/dto/notification-service/user-registered/user-registered.request';
+import UserAddTelegramRequestMessageData from '../../../../libs/common/src/dto/notification-service/user-add-telegram/user-add-telegram.request';
 
 @Injectable()
 export default class UserConsumer {
@@ -12,15 +14,13 @@ export default class UserConsumer {
 
   @MessagePattern(NotificationServiceMessagePattern.userRegistered)
   public async userRegistered(@Ctx() ctx: RmqContext) {
-    const data = getDataFromRMQContext<{ email: string }>(ctx);
+    const data = getDataFromRMQContext<UserRegisteredRequest>(ctx);
     await this.userService.addUser(data.email);
   }
 
   @MessagePattern(NotificationServiceMessagePattern.userAddTelegram)
   public async userAddTelegram(@Ctx() ctx: RmqContext) {
-    const data = getDataFromRMQContext<{ email: string; telegramName: string }>(
-      ctx,
-    );
+    const data = getDataFromRMQContext<UserAddTelegramRequestMessageData>(ctx);
     await this.userService.addTelegramAccount(data.email, data.telegramName);
   }
 }

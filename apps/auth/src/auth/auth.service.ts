@@ -11,7 +11,7 @@ import AddUserResponseMessageData from '../../../../libs/common/src/dto/auth-ser
 import { randomBytes } from 'crypto';
 import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/rmq.response.message-template';
 import LoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/login/login.request.message-data';
-import LoginResponsetMessageData from '../../../../libs/common/src/dto/auth-service/login/login.response.message-data';
+import LoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/login/login.response.message-data';
 import RefreshTokenResponseMessageData from '../../../../libs/common/src/dto/auth-service/refresh-token/refresh-token.response.message-data';
 import RefreshTokenRequestMessageData from '../../../../libs/common/src/dto/auth-service/refresh-token/refresh-token.request.message-data';
 import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.request.message-data';
@@ -64,7 +64,7 @@ export class AuthService {
 
   async login(
     dto: LoginRequestMessageData,
-  ): Promise<RMQResponseMessageTemplate<LoginResponsetMessageData>> {
+  ): Promise<RMQResponseMessageTemplate<LoginResponseMessageData>> {
     const user = await User.findOne({
       where: {
         email: dto.email,

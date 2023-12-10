@@ -6,6 +6,8 @@ import AddUserRequestMessageData from "@app/common/dto/auth-service/add-user/add
 import {AuthServiceMessagePattern} from "@app/common";
 import AddUserMultipleDto from "../dto/auth/request/add-user-multiple.dto";
 import BlockUserDto from "../dto/auth/request/block-user.dto";
+import LoginDto from "../../../auth/src/auth/dto/login.dto";
+import RefreshTokenDto from "../dto/auth/request/refresh-token.dto";
 
 const authQueue = 'auth_queue'
 const replyAuthQueue = 'auth_queue.reply'
@@ -57,10 +59,46 @@ export class ApiGatewayAuthService {
       await this.rabbitProducer.produce({
         data: dto,
         queue: authQueue,
-        pattern: AuthServiceMessagePattern.addUserMultiple,
+        pattern: AuthServiceMessagePattern.blockUser,
         reply: {
           replyTo: replyAuthQueue,
           correlationId: uuid
         }})
     }
+
+    async login(dto: LoginDto) {
+      const uuid = crypto.randomUUID()
+      await this.rabbitProducer.produce({
+        data: dto,
+        queue: authQueue,
+        pattern: AuthServiceMessagePattern.login,
+        reply: {
+          replyTo: replyAuthQueue,
+          correlationId: uuid
+        }})
+
+      return new Promise((resolve) => {
+        this.eventEmitter.once(uuid, async (data) => {
+          resolve(JSON.parse(data))
+        })
+      })
+    }
+
+  async refreshToken(dto: RefreshTokenDto) {
+    const uuid = crypto.randomUUID()
+    await this.rabbitProducer.produce({
+      data: dto,
+      queue: authQueue,
+      pattern: AuthServiceMessagePattern.refreshTokens,
+      reply: {
+        replyTo: replyAuthQueue,
+        correlationId: uuid
+      }})
+
+    return new Promise((resolve) => {
+      this.eventEmitter.once(uuid, async (data) => {
+        resolve(JSON.parse(data))
+      })
+    })
+  }
 }

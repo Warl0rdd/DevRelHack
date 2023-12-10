@@ -5,6 +5,9 @@ import AddUserDto from "../dto/auth/request/add-user.dto";
 import AddUserMultipleDto from "../dto/auth/request/add-user-multiple.dto";
 import AddUserResponseDto from "../dto/auth/response/add-user.response";
 import BlockUserDto from "../dto/auth/request/block-user.dto";
+import LoginDto from "../../../auth/src/auth/dto/login.dto";
+import LoginResponse from "../../../auth/src/auth/dto/login.response";
+import RefreshTokenResponse from "../dto/auth/response/refresh-token.response";
 
 @Controller('/api')
 export class ApiGatewayAuthController {
@@ -17,6 +20,7 @@ export class ApiGatewayAuthController {
   async registration(@Body() addUserDto: AddUserDto) {
     const result = (await this.apiGatewayService.addUser(addUserDto)) as any
     if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
+    return result
   }
 
   @ApiOperation({summary: 'add multiple users'})
@@ -26,6 +30,7 @@ export class ApiGatewayAuthController {
   async addUserMultiple(@Body() addUserMultipleDto: AddUserMultipleDto) {
     const result = (await this.apiGatewayService.addUserMultiple(addUserMultipleDto)) as any
     if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
+    return result
   }
 
   @ApiOperation({ summary: 'block user' })
@@ -33,5 +38,25 @@ export class ApiGatewayAuthController {
   @HttpCode(202)
   async blockUser(@Body() blockUserDto: BlockUserDto) {
     await this.apiGatewayService.blockUser(blockUserDto)
+  }
+
+  @ApiOperation({ summary: 'login' })
+  @Post('/auth/login')
+  @ApiResponse({ type: LoginResponse })
+  @HttpCode(200)
+  async login(@Body() loginDto: LoginDto) {
+    const result = (await this.apiGatewayService.login(loginDto)) as any
+    if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
+    return result
+  }
+
+  @ApiOperation({ summary: 'resfresh tokens' })
+  @Post('/auth/refresh-token')
+  @ApiResponse({ type: RefreshTokenResponse })
+  @HttpCode(200)
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenResponse) {
+    const result = (await this.apiGatewayService.refreshToken(refreshTokenDto)) as any
+    if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
+    return result
   }
 }

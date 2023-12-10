@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Position } from '../../db/entities/user.entity';
+import { Position } from '../../../../auth/src/db/entities/user.entity'
 
 export default class UserResponse {
   @ApiProperty()

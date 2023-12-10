@@ -1,6 +1,6 @@
 import {ApiProperty} from "@nestjs/swagger";
 import UserResponse from "./user.response";
-import User from "../../db/entities/user.entity";
+import User from '../../../../auth/src/db/entities/user.entity'
 
 export default class UpdateResponse {
     constructor(user: User) {

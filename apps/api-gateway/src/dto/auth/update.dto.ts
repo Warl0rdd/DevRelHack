@@ -1,5 +1,5 @@
 import {ApiProperty} from "@nestjs/swagger";
-import User from "../../db/entities/user.entity";
+import User from '../../../../auth/src/db/entities/user.entity'
 import {IsNotEmpty, IsNumber} from "class-validator";
 
 export default class UpdateDto {

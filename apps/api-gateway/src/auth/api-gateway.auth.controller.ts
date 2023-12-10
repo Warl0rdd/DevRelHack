@@ -1,23 +1,23 @@
 import {Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post} from '@nestjs/common';
-import { ApiGatewayService } from './api-gateway.service';
+import { ApiGatewayAuthService } from './api-gateway.auth.service';
 import {ApiOperation, ApiResponse} from "@nestjs/swagger";
-import RegistrationResponse from "./dto/auth/registration.response";
-import RegistrationDto from "./dto/auth/registration.dto";
-import LoginResponse from "./dto/auth/login.response";
-import LoginDto from "./dto/auth/login.dto";
-import UpdateResponse from "./dto/auth/update.response";
-import UpdateDto from "./dto/auth/update.dto";
+import RegistrationResponse from "../dto/auth/registration.response";
+import RegistrationDto from "../dto/auth/registration.dto";
+import LoginResponse from "../dto/auth/login.response";
+import LoginDto from "../dto/auth/login.dto";
+import UpdateResponse from "../dto/auth/update.response";
+import UpdateDto from "../dto/auth/update.dto";
 
-@Controller()
-export class ApiGatewayController {
-  constructor(private readonly apiGatewayService: ApiGatewayService) {}
+@Controller('/api')
+export class ApiGatewayAuthController {
+  constructor(private readonly apiGatewayService: ApiGatewayAuthService) {}
 
   @ApiOperation({ summary: 'registration' })
-  @Post('/register')
+  @Post('/auth/register')
   @ApiResponse({ type: RegistrationResponse })
   @HttpCode(201)
   registration(@Body() registrationDto: RegistrationDto) {
-
+    return this.apiGatewayService.register(registrationDto)
   }
 
   @ApiOperation({ summary: 'login' })

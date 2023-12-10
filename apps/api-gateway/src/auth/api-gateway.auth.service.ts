@@ -4,6 +4,8 @@ import {DirectReplyConsumerService} from "@app/rabbit-reply-consumer";
 import RegistrationDto from "../dto/auth/registration.dto";
 import * as crypto from "crypto";
 import {EventEmitter2} from "@nestjs/event-emitter";
+import AddUserRequestMessageData from "@app/common/dto/auth-service/add-user/add-user.request.message-data";
+import {AuthServiceMessagePattern} from "@app/common";
 
 @Injectable()
 export class ApiGatewayAuthService {
@@ -11,21 +13,20 @@ export class ApiGatewayAuthService {
   constructor(private readonly rabbitProducer: RabbitProducerService,
               private readonly rabbitConsumer: DirectReplyConsumerService,
               private readonly eventEmitter: EventEmitter2,) {}
-    async register(dto: RegistrationDto) {
-      Logger.verbose(`Got request: email: ${dto.email}, pass: ${dto.password}`)
+    async addUser(dto: AddUserRequestMessageData) {
       const uuid = crypto.randomUUID()
-      await this.rabbitProducer.produce({data: dto,
-          queue: 'auth_queue',
-        pattern: 'register',
-          reply:
-              {replyTo: 'auth_queue.reply',
-                correlationId: uuid}})
+      await this.rabbitProducer.produce({
+        data: dto,
+        queue: 'auth_queue',
+        pattern: AuthServiceMessagePattern.addUser,
+        reply: {
+          replyTo: 'auth_queue.reply',
+          correlationId: uuid
+        }})
 
-      // TODO: fix text/html header
-      // TODO: set timeout for errors
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         this.eventEmitter.once(uuid, async (data) => {
-          resolve(data)
+          resolve(JSON.parse(data))
         })
       })
     }

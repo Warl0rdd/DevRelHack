@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Position } from '../../../../auth/src/db/entities/user.entity'
+import {UserPosition} from "@app/common/enum/user.position.enum";
 
 export default class UserResponse {
   @ApiProperty()
@@ -21,7 +21,7 @@ export default class UserResponse {
   phoneNumber: string;
 
   @ApiProperty()
-  position: Position;
+  position: UserPosition;
 
   @ApiProperty()
   profilePic: string;

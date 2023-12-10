@@ -8,6 +8,9 @@ import AddUserMultipleDto from "../dto/auth/request/add-user-multiple.dto";
 import BlockUserDto from "../dto/auth/request/block-user.dto";
 import LoginDto from "../../../auth/src/auth/dto/login.dto";
 import RefreshTokenDto from "../dto/auth/request/refresh-token.dto";
+import UnBlockUserDto from "@app/common/dto/auth-service/unblock-user/unblock-user.request.message-data";
+import UnblockUserDto from "../dto/auth/request/unblock-user.dto";
+import UpdateUserDto from "../dto/auth/request/update-user.dto";
 
 const authQueue = 'auth_queue'
 const replyAuthQueue = 'auth_queue.reply'
@@ -64,6 +67,12 @@ export class ApiGatewayAuthService {
           replyTo: replyAuthQueue,
           correlationId: uuid
         }})
+
+      return new Promise((resolve) => {
+        this.eventEmitter.once(uuid, async (data) => {
+          resolve(JSON.parse(data))
+        })
+      })
     }
 
     async login(dto: LoginDto) {
@@ -90,6 +99,42 @@ export class ApiGatewayAuthService {
       data: dto,
       queue: authQueue,
       pattern: AuthServiceMessagePattern.refreshTokens,
+      reply: {
+        replyTo: replyAuthQueue,
+        correlationId: uuid
+      }})
+
+    return new Promise((resolve) => {
+      this.eventEmitter.once(uuid, async (data) => {
+        resolve(JSON.parse(data))
+      })
+    })
+  }
+
+  async unblockUser(dto: UnblockUserDto) {
+    const uuid = crypto.randomUUID()
+    await this.rabbitProducer.produce({
+      data: dto,
+      queue: authQueue,
+      pattern: AuthServiceMessagePattern.unblockUser,
+      reply: {
+        replyTo: replyAuthQueue,
+        correlationId: uuid
+      }})
+
+    return new Promise((resolve) => {
+      this.eventEmitter.once(uuid, async (data) => {
+        resolve(JSON.parse(data))
+      })
+    })
+  }
+
+  async updateUser(dto: UpdateUserDto) {
+    const uuid = crypto.randomUUID()
+    await this.rabbitProducer.produce({
+      data: dto,
+      queue: authQueue,
+      pattern: AuthServiceMessagePattern.updateProfile,
       reply: {
         replyTo: replyAuthQueue,
         correlationId: uuid

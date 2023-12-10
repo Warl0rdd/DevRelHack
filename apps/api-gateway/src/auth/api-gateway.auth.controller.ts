@@ -8,19 +8,22 @@ import BlockUserDto from "../dto/auth/request/block-user.dto";
 import LoginDto from "../../../auth/src/auth/dto/login.dto";
 import LoginResponse from "../../../auth/src/auth/dto/login.response";
 import RefreshTokenResponse from "../dto/auth/response/refresh-token.response";
+import UnblockUserDto from "../dto/auth/request/unblock-user.dto";
+import UpdateUserDto from "../dto/auth/request/update-user.dto";
+import UpdateUserResponse from "../dto/auth/response/update-user.response";
 
 @Controller('/api')
 export class ApiGatewayAuthController {
   constructor(private readonly apiGatewayService: ApiGatewayAuthService) {}
 
-  @ApiOperation({ summary: 'registration' })
+  @ApiOperation({ summary: 'add user' })
   @Post('/auth/add-user')
   @ApiResponse({ type: AddUserResponseDto })
   @HttpCode(201)
-  async registration(@Body() addUserDto: AddUserDto) {
+  async addUser(@Body() addUserDto: AddUserDto) {
     const result = (await this.apiGatewayService.addUser(addUserDto)) as any
     if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
-    return result
+    return result.data
   }
 
   @ApiOperation({summary: 'add multiple users'})
@@ -30,14 +33,15 @@ export class ApiGatewayAuthController {
   async addUserMultiple(@Body() addUserMultipleDto: AddUserMultipleDto) {
     const result = (await this.apiGatewayService.addUserMultiple(addUserMultipleDto)) as any
     if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
-    return result
+    return result.data
   }
 
   @ApiOperation({ summary: 'block user' })
   @Post('/auth/block-user')
   @HttpCode(202)
   async blockUser(@Body() blockUserDto: BlockUserDto) {
-    await this.apiGatewayService.blockUser(blockUserDto)
+    const result = (await this.apiGatewayService.blockUser(blockUserDto)) as any
+    if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
   }
 
   @ApiOperation({ summary: 'login' })
@@ -47,16 +51,34 @@ export class ApiGatewayAuthController {
   async login(@Body() loginDto: LoginDto) {
     const result = (await this.apiGatewayService.login(loginDto)) as any
     if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
-    return result
+    return result.data
   }
 
-  @ApiOperation({ summary: 'resfresh tokens' })
+  @ApiOperation({ summary: 'refresh tokens' })
   @Post('/auth/refresh-token')
   @ApiResponse({ type: RefreshTokenResponse })
   @HttpCode(200)
   async refreshToken(@Body() refreshTokenDto: RefreshTokenResponse) {
     const result = (await this.apiGatewayService.refreshToken(refreshTokenDto)) as any
     if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
-    return result
+    return result.data
+  }
+
+  @ApiOperation({ summary: 'unblock user' })
+  @Post('/auth/unblock-user')
+  @HttpCode(202)
+  async unblockUser(@Body() unblockUserDto: UnblockUserDto) {
+    const result = (await this.apiGatewayService.unblockUser(unblockUserDto)) as any
+    if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
+  }
+
+  @ApiOperation({ summary: 'update user' })
+  @Post('/auth/update-user')
+  @ApiResponse({ type: UpdateUserResponse })
+  @HttpCode(200)
+  async update(@Body() updateUserDto: UpdateUserDto) {
+    const result = (await this.apiGatewayService.updateUser(updateUserDto)) as any
+    if (!result.success) throw new HttpException(result.error.message, result.error.statusCode)
+    return result.data
   }
 }

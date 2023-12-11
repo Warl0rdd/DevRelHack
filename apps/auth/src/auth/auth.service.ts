@@ -18,6 +18,7 @@ import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-s
 import UpdateUserResponseMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.response.message-data';
 import BlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/block-user/block-user.request.message-data copy';
 import UnBlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/unblock-user/unblock-user.request.message-data';
+import { UserPosition } from '../../../../libs/common/src/enum/user.position.enum';
 
 @Injectable()
 export class AuthService {
@@ -62,9 +63,50 @@ export class AuthService {
     };
   }
 
+  async addRootUser(): Promise<void> {
+    const user = new User();
+    user.email = process.env.ROOT_EMAIL;
+    user.password = process.env.ROOT_PASSWORD;
+    user.position = UserPosition.DEVREL;
+    await user.save();
+  }
+
   async login(
     dto: LoginRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<LoginResponseMessageData>> {
+    // Root user login / creation
+    if (dto.email === process.env.ROOT_EMAIL) {
+      const { password, email } = dto;
+      if (password === process.env.ROOT_PASSWORD) {
+        let rootUser = await User.findOne({
+          where: {
+            email: dto.email,
+          },
+        });
+
+        if (!rootUser) {
+          await this.addRootUser();
+        }
+
+        rootUser = await User.findOne({
+          where: {
+            email: dto.email,
+          },
+        });
+
+        const tokens = this.jwtService.issuePairTokens({
+          id: rootUser.id,
+          email: rootUser.email,
+          position: rootUser.position,
+        });
+
+        return {
+          success: true,
+          data: tokens,
+        };
+      }
+    }
+
     const user = await User.findOne({
       where: {
         email: dto.email,

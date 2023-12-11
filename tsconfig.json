@@ -41,6 +41,12 @@
       ],
       "@app/common/*": [
         "libs/common/src/*"
+      ],
+      "@app/jwt": [
+        "libs/jwt/src"
+      ],
+      "@app/jwt/*": [
+        "libs/jwt/src/*"
       ]
     }
   }

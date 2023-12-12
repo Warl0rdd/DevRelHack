@@ -19,6 +19,8 @@ import BlockUserDto from '../dto/auth/request/block-user.dto';
 import UnblockUserDto from '../dto/auth/request/unblock-user.dto';
 import AddUserResponseDto from '../dto/auth/response/add-user.response';
 import { UserService } from './user.service';
+import { UserPosition } from '../../../../libs/common/src/enum/user.position.enum';
+import { CheckRoleGuard } from '../../../../libs/common/src';
 
 @ApiTags('User')
 @Controller('user')
@@ -26,7 +28,7 @@ export default class UsersController {
   constructor(private readonly userService: UserService) {}
 
   @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
+  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
   @ApiOperation({ summary: 'add user' })
   @Post('add-user')
   @ApiResponse({ type: AddUserResponseDto })
@@ -39,7 +41,7 @@ export default class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
+  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
   @ApiOperation({ summary: 'add multiple users' })
   @Post('add-user-multiple')
   @ApiResponse({ type: AddUserMultipleDto })
@@ -54,7 +56,7 @@ export default class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
+  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
   @ApiOperation({ summary: 'block user' })
   @Post('block-user')
   @HttpCode(202)
@@ -65,7 +67,7 @@ export default class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
+  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
   @ApiOperation({ summary: 'unblock user' })
   @Post('unblock-user')
   @HttpCode(202)

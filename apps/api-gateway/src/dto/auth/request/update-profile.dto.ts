@@ -1,14 +1,7 @@
-import { UserPosition } from '@app/common/enum/user.position.enum';
-import {
-  IsBase64,
-  IsDate,
-  IsNotEmpty,
-  IsPhoneNumber,
-  IsString,
-} from 'class-validator';
+import { IsBase64, IsDate, IsPhoneNumber, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class UpdateUserDto {
+export default class UpdateProfileDto {
   @IsString()
   @ApiProperty({ example: 'John' })
   fullName?: string;
@@ -21,10 +14,6 @@ export default class UpdateUserDto {
   @IsPhoneNumber()
   @ApiProperty({ example: '88005553535' })
   phoneNumber?: string;
-
-  @IsNotEmpty()
-  @ApiProperty({ example: 'developer/devrel/tester/user (pick one)' })
-  position?: UserPosition;
 
   @IsBase64()
   @ApiProperty({ example: 'some base64 profile pic string' })

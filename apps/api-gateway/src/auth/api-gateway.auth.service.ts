@@ -8,6 +8,7 @@ import RefreshTokenDto from '../dto/auth/request/refresh-token.dto';
 import UpdateUserDto from '../dto/auth/request/update-user.dto';
 import GetUserRequest from '../dto/auth/request/get-user.request';
 import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
+import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.request.message-data';
 
 const authQueue = 'auth_queue';
 const replyAuthQueue = 'auth_queue.reply';
@@ -95,7 +96,7 @@ export class ApiGatewayAuthService {
     });
   }
 
-  async updateProfile(dto: UpdateUserDto) {
+  async updateProfile(dto: UpdateUserRequestMessageData) {
     const uuid = crypto.randomUUID();
     await this.rabbitProducer.produce({
       data: dto,

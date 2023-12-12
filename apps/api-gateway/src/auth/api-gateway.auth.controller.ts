@@ -22,6 +22,8 @@ import UpdateUserDto from '../dto/auth/request/update-user.dto';
 import UpdateUserResponse from '../dto/auth/response/update-user.response';
 import CheckTokenGuard from '../../../../libs/common/src/guard/check-token.guard';
 import ChangePasswordRequest from '../dto/auth/request/change-password.request';
+import UpdateProfileDto from '../dto/auth/request/update-profile.dto';
+import { User } from '../../../../libs/common/src/decorator/get-user.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -56,14 +58,19 @@ export class ApiGatewayAuthController {
 
   @ApiBearerAuth()
   @UseGuards(CheckTokenGuard)
-  @ApiOperation({ summary: 'update user' })
-  @Post('update-user')
+  @ApiOperation({ summary: 'update profile' })
+  @Post('update-profile')
   @ApiResponse({ type: UpdateUserResponse })
   @HttpCode(200)
-  async updateProfile(@Body() updateUserDto: UpdateUserDto) {
-    const result = (await this.apiGatewayService.updateProfile(
-      updateUserDto,
-    )) as any;
+  async updateProfile(
+    @Body() updateUserDto: UpdateProfileDto,
+    @User() user: any,
+  ) {
+    console.log(user);
+    const result = (await this.apiGatewayService.updateProfile({
+      email: user.email,
+      ...updateUserDto,
+    })) as any;
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
     return result.data;

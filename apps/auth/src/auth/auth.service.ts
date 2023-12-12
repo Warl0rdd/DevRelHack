@@ -152,7 +152,8 @@ export class AuthService {
   async update(
     dto: UpdateUserRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<UpdateUserResponseMessageData>> {
-    const { email, birthday, phoneNumber, position, profilePic } = dto;
+    const { email, fullName, birthday, phoneNumber, position, profilePic } =
+      dto;
     const user = await User.findOne({
       where: {
         email: email,
@@ -191,6 +192,9 @@ export class AuthService {
     }
     if (profilePic) {
       user.profilePic = profilePic;
+    }
+    if (fullName) {
+      user.fullName = fullName;
     }
 
     await user.save();
@@ -348,6 +352,7 @@ export class AuthService {
       data: {
         email: user.email,
         phoneNumber: user.phoneNumber,
+        fullName: user.fullName,
         isActive: user.isActive,
         position: user.position,
         created: user.created,

@@ -14,6 +14,8 @@ import RefreshTokenRequestMessageData from '../../../../libs/common/src/dto/auth
 import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.request.message-data';
 import BlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/block-user/block-user.request.message-data copy';
 import UnBlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/unblock-user/unblock-user.request.message-data';
+import GetUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/get-user/get-user.request.message-data';
+import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
 
 @Controller()
 export default class AuthConsumer {
@@ -118,8 +120,35 @@ export default class AuthConsumer {
     });
   }
 
-  // @MessagePattern(AuthServiceMessagePattern.deleteUser)
-  // public async deleteUser(@Ctx() ctx: RmqContext) {
-  //   // TODO
-  // }
+  @MessagePattern(AuthServiceMessagePattern.getUser)
+  public async getUser(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<GetUserRequestMessageData>(ctx);
+    const result = await this.authService.getUser(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.changePassword)
+  public async changePassword(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<ChangePasswordRequestMessageData>(ctx);
+    const result = await this.authService.changePassword(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
 }

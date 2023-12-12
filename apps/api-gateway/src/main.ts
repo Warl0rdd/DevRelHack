@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
-import { ApiGatewayAuthModule } from './auth/api-gateway.auth.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
+import { config } from 'dotenv';
+import { ApiGatewayModule } from './api-gateway.module';
+config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(ApiGatewayAuthModule);
+  const app = await NestFactory.create(ApiGatewayModule);
 
   const swaggerPostfix = 'swagger';
   const config = new DocumentBuilder()

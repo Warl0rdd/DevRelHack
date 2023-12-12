@@ -7,15 +7,18 @@ import {
 } from './jwt.const';
 import { IJwtPairTokens } from './jwt.interface';
 import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export default class JwtTokenService {
-  public constructor(
-    @Inject(PROVIDE_JWT_SECRET)
-    private readonly jwtSecret: string,
-  ) {}
+  private readonly jwtSecret: string;
+
+  public constructor(private readonly configService: ConfigService) {
+    this.jwtSecret = this.configService.get('jwt.secret');
+  }
 
   public sign(data: any, options: jwt.SignOptions) {
+    console.log(this.jwtSecret);
     return jwt.sign(data, this.jwtSecret, options);
   }
 

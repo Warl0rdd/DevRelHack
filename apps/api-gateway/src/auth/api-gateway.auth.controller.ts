@@ -3,70 +3,33 @@ import {
   Controller,
   HttpCode,
   HttpException,
+  Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiGatewayAuthService } from './api-gateway.auth.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import AddUserDto from '../dto/auth/request/add-user.dto';
-import AddUserMultipleDto from '../dto/auth/request/add-user-multiple.dto';
-import AddUserResponseDto from '../dto/auth/response/add-user.response';
-import BlockUserDto from '../dto/auth/request/block-user.dto';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import LoginDto from '../../../auth/src/auth/dto/login.dto';
 import LoginResponse from '../../../auth/src/auth/dto/login.response';
 import RefreshTokenResponse from '../dto/auth/response/refresh-token.response';
-import UnblockUserDto from '../dto/auth/request/unblock-user.dto';
 import UpdateUserDto from '../dto/auth/request/update-user.dto';
 import UpdateUserResponse from '../dto/auth/response/update-user.response';
 import CheckTokenGuard from '../../../../libs/common/src/guard/check-token.guard';
+import ChangePasswordRequest from '../dto/auth/request/change-password.request';
 
-@Controller('/api')
+@ApiTags('Auth')
+@Controller('auth')
 export class ApiGatewayAuthController {
   constructor(private readonly apiGatewayService: ApiGatewayAuthService) {}
 
-  @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
-  @ApiOperation({ summary: 'add user' })
-  @Post('/auth/add-user')
-  @ApiResponse({ type: AddUserResponseDto })
-  @HttpCode(201)
-  async addUser(@Body() addUserDto: AddUserDto) {
-    const result = (await this.apiGatewayService.addUser(addUserDto)) as any;
-    if (!result.success)
-      throw new HttpException(result.error.message, result.error.statusCode);
-    return result.data;
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
-  @ApiOperation({ summary: 'add multiple users' })
-  @Post('/auth/add-user-multiple')
-  @ApiResponse({ type: AddUserMultipleDto })
-  @HttpCode(201)
-  async addUserMultiple(@Body() addUserMultipleDto: AddUserMultipleDto) {
-    const result = (await this.apiGatewayService.addUserMultiple(
-      addUserMultipleDto,
-    )) as any;
-    if (!result.success)
-      throw new HttpException(result.error.message, result.error.statusCode);
-    return result.data;
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
-  @ApiOperation({ summary: 'block user' })
-  @Post('/auth/block-user')
-  @HttpCode(202)
-  async blockUser(@Body() blockUserDto: BlockUserDto) {
-    const result = (await this.apiGatewayService.blockUser(
-      blockUserDto,
-    )) as any;
-    if (!result.success)
-      throw new HttpException(result.error.message, result.error.statusCode);
-  }
-
   @ApiOperation({ summary: 'login' })
-  @Post('/auth/login')
+  @Post('login')
   @ApiResponse({ type: LoginResponse })
   @HttpCode(200)
   async login(@Body() loginDto: LoginDto) {
@@ -79,7 +42,7 @@ export class ApiGatewayAuthController {
   @ApiBearerAuth()
   @UseGuards(CheckTokenGuard)
   @ApiOperation({ summary: 'refresh tokens' })
-  @Post('/auth/refresh-token')
+  @Post('refresh-token')
   @ApiResponse({ type: RefreshTokenResponse })
   @HttpCode(200)
   async refreshToken(@Body() refreshTokenDto: RefreshTokenResponse) {
@@ -93,29 +56,50 @@ export class ApiGatewayAuthController {
 
   @ApiBearerAuth()
   @UseGuards(CheckTokenGuard)
-  @ApiOperation({ summary: 'unblock user' })
-  @Post('/auth/unblock-user')
-  @HttpCode(202)
-  async unblockUser(@Body() unblockUserDto: UnblockUserDto) {
-    const result = (await this.apiGatewayService.unblockUser(
-      unblockUserDto,
-    )) as any;
-    if (!result.success)
-      throw new HttpException(result.error.message, result.error.statusCode);
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
   @ApiOperation({ summary: 'update user' })
-  @Post('/auth/update-user')
+  @Post('update-user')
   @ApiResponse({ type: UpdateUserResponse })
   @HttpCode(200)
-  async update(@Body() updateUserDto: UpdateUserDto) {
-    const result = (await this.apiGatewayService.updateUser(
+  async updateProfile(@Body() updateUserDto: UpdateUserDto) {
+    const result = (await this.apiGatewayService.updateProfile(
       updateUserDto,
     )) as any;
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
     return result.data;
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(CheckTokenGuard)
+  @ApiOperation({ summary: 'Get profile' })
+  @Post('self')
+  @ApiResponse({ type: UpdateUserResponse })
+  @HttpCode(200)
+  async getSelf(@Req() request: Request) {
+    const userData = request.headers['user'];
+    const result = (await this.apiGatewayService.getProfile({
+      email: userData.email,
+    })) as any;
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
+    return result.data;
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(CheckTokenGuard)
+  @ApiOperation({ summary: 'Change password' })
+  @Patch('change-password')
+  @HttpCode(200)
+  async changePassword(
+    @Req() request: Request,
+    @Body() data: ChangePasswordRequest,
+  ) {
+    const userData = request.headers['user'];
+    const result = (await this.apiGatewayService.changePassword({
+      ...data,
+      email: userData.email,
+    })) as any;
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
   }
 }

@@ -19,6 +19,9 @@ import UpdateUserResponseMessageData from '../../../../libs/common/src/dto/auth-
 import BlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/block-user/block-user.request.message-data copy';
 import UnBlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/unblock-user/unblock-user.request.message-data';
 import { UserPosition } from '../../../../libs/common/src/enum/user.position.enum';
+import GetUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/get-user/get-user.request.message-data';
+import GetUserResponseMessageData from '../../../../libs/common/src/dto/auth-service/get-user/get-user.response.message-data';
+import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
 
 @Injectable()
 export class AuthService {
@@ -66,7 +69,7 @@ export class AuthService {
   async addRootUser(): Promise<void> {
     const user = new User();
     user.email = process.env.ROOT_EMAIL;
-    user.password = process.env.ROOT_PASSWORD;
+    user.password = await this.passwordToHash(process.env.ROOT_PASSWORD);
     user.position = UserPosition.DEVREL;
     await user.save();
   }
@@ -75,8 +78,8 @@ export class AuthService {
     dto: LoginRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<LoginResponseMessageData>> {
     // Root user login / creation
-    if (dto.email === process.env.ROOT_EMAIL) {
-      const { password, email } = dto;
+    if (this.checkIsRootUser(dto.email)) {
+      const { password } = dto;
       if (password === process.env.ROOT_PASSWORD) {
         let rootUser = await User.findOne({
           where: {
@@ -113,7 +116,7 @@ export class AuthService {
       },
     });
 
-    if (user === null) {
+    if (user === null || user.isActive === false) {
       return {
         success: false,
         error: {
@@ -155,12 +158,24 @@ export class AuthService {
         email: email,
       },
     });
-    if (!user) {
+    if (!user || user.isActive === false) {
       return {
         success: false,
         error: {
           message: '',
           statusCode: HttpStatus.NOT_FOUND,
+        },
+      };
+    }
+    if (this.checkIsRootUser(dto.email)) {
+      return {
+        success: true,
+        data: {
+          email: user.email,
+          isActive: user.isActive,
+          position: user.position,
+          created: user.created,
+          updated: user.updated,
         },
       };
     }
@@ -193,61 +208,6 @@ export class AuthService {
     };
   }
 
-  // async changePassword(
-  //   dto: UpdateUserRequestMessageData,
-  // ): Promise<RMQResponseMessageTemplate<UpdateUserResponseMessageData>> {
-  //   const { email, birthday, phoneNumber, position, profilePic } = dto;
-  //   const user = await User.findOne({
-  //     where: {
-  //       email: email,
-  //     },
-  //   });
-  //   if (!user) {
-  //     return {
-  //       success: false,
-  //       error: {
-  //         message: '',
-  //         statusCode: HttpStatus.NOT_FOUND,
-  //       },
-  //     };
-  //   }
-
-  //   if (birthday) {
-  //     user.birthday = birthday;
-  //   }
-  //   if (phoneNumber) {
-  //     user.phoneNumber = phoneNumber;
-  //   }
-  //   if (position) {
-  //     user.position = position;
-  //   }
-  //   if (profilePic) {
-  //     user.profilePic = profilePic;
-  //   }
-
-  //   await user.save();
-
-  //   return {
-  //     success: true,
-  //     data: {
-  //       email: user.email,
-  //       phoneNumber: user.phoneNumber,
-  //       isActive: user.isActive,
-  //       position: user.position,
-  //       created: user.created,
-  //       updated: user.updated,
-  //     },
-  //   };
-  // }
-
-  // async delete(id: number): Promise<boolean> {
-  //   const user = await User.findOne({ where: { id } });
-  //   if (!user) return false;
-  //   await user.remove();
-
-  //   return true;
-  // }
-
   async blockUser(
     dto: BlockUserRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<BlockUserRequestMessageData>> {
@@ -257,6 +217,15 @@ export class AuthService {
         email: email,
       },
     });
+    if (this.checkIsRootUser(email)) {
+      return {
+        success: false,
+        error: {
+          message: '',
+          statusCode: HttpStatus.BAD_REQUEST,
+        },
+      };
+    }
     if (!user) {
       return {
         success: false,
@@ -285,6 +254,15 @@ export class AuthService {
         email: email,
       },
     });
+    if (this.checkIsRootUser(email)) {
+      return {
+        success: false,
+        error: {
+          message: '',
+          statusCode: HttpStatus.BAD_REQUEST,
+        },
+      };
+    }
     if (!user) {
       return {
         success: false,
@@ -344,5 +322,83 @@ export class AuthService {
       success: true,
       data: tokens,
     };
+  }
+
+  async getUser(
+    dto: GetUserRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<GetUserResponseMessageData>> {
+    const { email } = dto;
+    const user = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
+    if (!user) {
+      return {
+        success: false,
+        error: {
+          message: '',
+          statusCode: HttpStatus.NOT_FOUND,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        isActive: user.isActive,
+        position: user.position,
+        created: user.created,
+        updated: user.updated,
+      },
+    };
+  }
+
+  async changePassword(
+    dto: ChangePasswordRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<null>> {
+    const { email, oldPassword, newPassword } = dto;
+    const user = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
+    if (!user) {
+      return {
+        success: false,
+        error: {
+          message: '',
+          statusCode: HttpStatus.NOT_FOUND,
+        },
+      };
+    }
+
+    const actualOldPassword = user.password;
+    const oldPasswordMatches = bcrypt.compareSync(
+      oldPassword,
+      actualOldPassword,
+    );
+    if (!oldPasswordMatches) {
+      return {
+        success: false,
+        error: {
+          message: 'Старый пароль неверный',
+          statusCode: HttpStatus.BAD_REQUEST,
+        },
+      };
+    }
+
+    user.password = await this.passwordToHash(newPassword);
+    await user.save();
+
+    return {
+      success: true,
+    };
+  }
+
+  private checkIsRootUser(email: string) {
+    return email === process.env.ROOT_EMAIL;
   }
 }

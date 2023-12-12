@@ -1,6 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { config } from 'dotenv';
+config({
+  path: '.env.auth',
+});
 
 async function bootstrap() {
   const user = 'user';

@@ -7,4 +7,6 @@ export enum AuthServiceMessagePattern {
   unblockUser = 'unblockUser',
   deleteUser = 'deleteUser',
   addUserMultiple = 'addUserMultiple',
+  getUser = 'getUser',
+  changePassword = 'changePassword',
 }

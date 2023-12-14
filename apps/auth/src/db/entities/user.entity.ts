@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { UserPosition } from '../../../../../libs/common/src/enum/user.position.enum';
 
-@Entity('db_users')
+@Entity('auth_users')
 export default class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;

@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import TelegramAccount from './telegram-account.entity';
 
-@Entity('user')
+@Entity('notification_users')
 export default class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;

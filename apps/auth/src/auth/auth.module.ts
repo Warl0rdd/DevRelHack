@@ -8,6 +8,9 @@ import User from '../db/entities/user.entity';
 import { jwtConfig } from '../config/jwt.config';
 import AuthConsumer from './auth.consumer';
 import { RabbitProducerModule } from '../../../../libs/rabbit-producer/src';
+import TelegramCodeEntity from '../db/entities/telegram-code.entity';
+import { RabbitReplyConsumerModule } from '../../../../libs/rabbit-reply-consumer/src';
+import { QueueName } from '../../../../libs/common/src';
 
 @Module({
   imports: [
@@ -20,11 +23,18 @@ import { RabbitProducerModule } from '../../../../libs/rabbit-producer/src';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => {
         const dbConfig = config.get('typeorm');
-        return { ...dbConfig, entities: [User], synchronize: true };
+        return {
+          ...dbConfig,
+          entities: [User, TelegramCodeEntity],
+          synchronize: true,
+        };
       },
       inject: [ConfigService],
     }),
     RabbitProducerModule.forRoot('amqp://user:password@localhost:5672'),
+    RabbitReplyConsumerModule.forRoot('amqp://user:password@localhost:5672', [
+      QueueName.notification_to_auth_queue_reply,
+    ]),
   ],
   controllers: [AuthConsumer],
   providers: [AuthService],

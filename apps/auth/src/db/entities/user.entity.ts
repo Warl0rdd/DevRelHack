@@ -51,7 +51,7 @@ export default class User extends BaseEntity {
   @Column({
     type: 'enum',
     enum: UserPosition,
-    default: UserPosition.USER,
+    default: UserPosition.FE_DEVELOPER,
   })
   position: UserPosition;
 
@@ -68,4 +68,11 @@ export default class User extends BaseEntity {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   public updated;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    name: 'github_link',
+  })
+  public githubLink?: string;
 }

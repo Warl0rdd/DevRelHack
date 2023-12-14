@@ -13,7 +13,7 @@ async function bootstrap() {
         urls: [`amqp://${user}:${password}@localhost:5672`],
         queue: 'notification_queue',
         queueOptions: {
-          durable: false,
+          durable: true,
         },
       },
     },

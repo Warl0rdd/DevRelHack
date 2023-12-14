@@ -1,6 +1,6 @@
 import { UserPosition } from '../../../enum/user.position.enum';
 
-export default class UpdateUserResponseMessageData {
+class FindUsersUserData {
   fullName?: string;
 
   birthday?: string;
@@ -15,9 +15,16 @@ export default class UpdateUserResponseMessageData {
 
   position: UserPosition;
 
+  githubLink?: string;
+
   created: Date;
 
   updated: Date;
+}
 
-  githubLink?: string;
+export default class FindUsersResponseMessageData {
+  users: FindUsersUserData[];
+  take: number;
+  skip: number;
+  total: number;
 }

@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpException,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -21,11 +23,34 @@ import AddUserResponseDto from '../dto/auth/response/add-user.response';
 import { UserService } from './user.service';
 import { UserPosition } from '../../../../libs/common/src/enum/user.position.enum';
 import { CheckRoleGuard } from '../../../../libs/common/src';
+import FindUsersFilterQuery, {
+  PaginationQuery,
+} from '../dto/auth/request/find-users.request';
 
 @ApiTags('User')
 @Controller('user')
 export default class UsersController {
   constructor(private readonly userService: UserService) {}
+
+  @ApiBearerAuth()
+  @UseGuards(CheckTokenGuard)
+  @ApiOperation({ summary: 'Find users' })
+  @Get()
+  @HttpCode(200)
+  async findUsers(
+    @Query('filter') filter: FindUsersFilterQuery,
+    @Query('page') pagination: PaginationQuery,
+  ) {
+    const result = await this.userService.findUsers({
+      take: pagination.take,
+      skip: pagination.skip,
+      ...filter,
+    });
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
+
+    return result.data;
+  }
 
   @ApiBearerAuth()
   @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))

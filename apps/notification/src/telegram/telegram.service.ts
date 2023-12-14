@@ -4,6 +4,8 @@ import { TelegramAccountStatusEnum } from './telegram.account-status.enum';
 import User from '../db/entities/user.entity';
 import TelegramAccount from '../db/entities/telegram-account.entity';
 import { In } from 'typeorm';
+import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/rmq.response.message-template';
+import { HttpStatusCode } from 'axios';
 
 @Injectable()
 export default class TelegramService {
@@ -59,7 +61,10 @@ export default class TelegramService {
     }
   }
 
-  public async sendMessageByUserEmail(email: string, message: string) {
+  public async sendMessageByUserEmail(
+    email: string,
+    message: string,
+  ): Promise<RMQResponseMessageTemplate<null>> {
     const telegramInfo = await TelegramAccount.findOne({
       where: {
         user: {
@@ -67,10 +72,21 @@ export default class TelegramService {
         },
       },
     });
-    if (!telegramInfo) return;
+    if (!telegramInfo) {
+      return {
+        success: false,
+        error: {
+          statusCode: HttpStatusCode.BadRequest,
+          message: 'У пользователя нет телеграмм аккаунта',
+        },
+      };
+    }
 
     const chatId = telegramInfo.telegramChatId;
     await this.bot.sendMessage(chatId, message);
+    return {
+      success: true,
+    };
   }
 
   public async sendMessageByTelegramname(

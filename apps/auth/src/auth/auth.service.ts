@@ -8,7 +8,7 @@ import {
 } from '../jwt/jwt.const';
 import AddUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/add-user/add-user.request.message-data';
 import AddUserResponseMessageData from '../../../../libs/common/src/dto/auth-service/add-user/add-user.response.message-data';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomInt, randomUUID } from 'crypto';
 import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/rmq.response.message-template';
 import LoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/login/login.request.message-data';
 import LoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/login/login.response.message-data';
@@ -22,10 +22,25 @@ import { UserPosition } from '../../../../libs/common/src/enum/user.position.enu
 import GetUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/get-user/get-user.request.message-data';
 import GetUserResponseMessageData from '../../../../libs/common/src/dto/auth-service/get-user/get-user.response.message-data';
 import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
+import SendTelegramCodeRequestMessageData from '../../../../libs/common/src/dto/auth-service/send-telegram-code/send-telegram-code.request.message-data';
+import { RabbitProducerService } from '../../../../libs/rabbit-producer/src';
+import {
+  NotificationServiceMessagePattern,
+  QueueName,
+} from '../../../../libs/common/src';
+import TelegramSingleRequestMessageData from '../../../../libs/common/src/dto/notification-service/telegram-single/telegram-single.request';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import TelegramCodeEntity from '../db/entities/telegram-code.entity';
+import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.request.message-data';
+import TelegramLoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.response.message-data';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly producerService: RabbitProducerService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async passwordToHash(pass: string): Promise<string> {
     const salt = bcrypt.genSaltSync(10);
@@ -400,6 +415,125 @@ export class AuthService {
 
     return {
       success: true,
+    };
+  }
+
+  async sendTelegramCode(
+    dto: SendTelegramCodeRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<null>> {
+    const { email } = dto;
+    const user = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
+    if (!user) {
+      return {
+        success: false,
+        error: {
+          message: 'Пользователь не найден',
+          statusCode: HttpStatus.BAD_REQUEST,
+        },
+      };
+    }
+
+    await TelegramCodeEntity.delete({
+      email,
+    });
+    const code = await randomInt(9999);
+    const telegramCodeEntity = new TelegramCodeEntity();
+    telegramCodeEntity.code = code.toString();
+    telegramCodeEntity.email = email;
+    await telegramCodeEntity.save();
+
+    const data: TelegramSingleRequestMessageData = {
+      email: email,
+      message: `Одноразовый код для входа: ${code}`,
+    };
+
+    const uuid = randomUUID();
+    await this.producerService.produce({
+      queue: QueueName.notification_queue,
+      pattern: NotificationServiceMessagePattern.telegramSingle,
+      data,
+      reply: {
+        correlationId: uuid,
+        replyTo: QueueName.notification_to_auth_queue_reply,
+      },
+    });
+
+    const response: RMQResponseMessageTemplate<null> = await new Promise(
+      (resolve) => {
+        this.eventEmitter.once(uuid, async (data) => {
+          resolve(JSON.parse(data));
+        });
+      },
+    );
+
+    if (response.success === false) {
+      return response;
+    }
+
+    return {
+      success: true,
+    };
+  }
+
+  async telegramLogin(
+    dto: TelegramLoginRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<TelegramLoginResponseMessageData>> {
+    const { email } = dto;
+    const telegramCode = await TelegramCodeEntity.findOne({
+      where: {
+        email: email,
+      },
+    });
+    if (!telegramCode) {
+      return {
+        success: false,
+        error: {
+          message: 'Код не найден',
+          statusCode: HttpStatus.BAD_REQUEST,
+        },
+      };
+    }
+    if (dto.code !== telegramCode.code) {
+      return {
+        success: false,
+        error: {
+          message: 'Код неверный',
+          statusCode: HttpStatus.BAD_REQUEST,
+        },
+      };
+    }
+    const user = await User.findOne({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    if (user === null || user.isActive === false) {
+      return {
+        success: false,
+        error: {
+          message: 'Код не найден',
+          statusCode: HttpStatus.UNAUTHORIZED,
+        },
+      };
+    }
+
+    await TelegramCodeEntity.delete({
+      email,
+    });
+    const tokens = this.jwtService.issuePairTokens({
+      id: user.id,
+      email: user.email,
+      position: user.position,
+    });
+
+    return {
+      success: true,
+      data: tokens,
     };
   }
 

@@ -14,6 +14,8 @@ import UpdateUserDto from '../dto/auth/request/update-user.dto';
 import GetUserRequest from '../dto/auth/request/get-user.request';
 import ChangePasswordRequest from '../dto/auth/request/change-password.request';
 import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
+import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/rmq.response.message-template';
+import { NotificationService } from '../notification/api-gateway.notification.service';
 
 const authQueue = 'auth_queue';
 const replyAuthQueue = 'auth_queue.reply';
@@ -23,6 +25,7 @@ export class UserService {
   constructor(
     private readonly rabbitProducer: RabbitProducerService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async addUser(dto: AddUserRequestMessageData) {
@@ -37,11 +40,23 @@ export class UserService {
       },
     });
 
-    return new Promise((resolve) => {
-      this.eventEmitter.once(uuid, async (data) => {
-        resolve(JSON.parse(data));
-      });
+    const result: RMQResponseMessageTemplate<null> = await new Promise(
+      (resolve) => {
+        this.eventEmitter.once(uuid, async (data) => {
+          resolve(JSON.parse(data));
+        });
+      },
+    );
+
+    if (!result.success) {
+      return result;
+    }
+
+    await this.notificationService.addUser({
+      email: dto.email,
     });
+
+    return result;
   }
 
   async addUserMultiple(dto: AddUserMultipleDto) {

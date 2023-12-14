@@ -74,5 +74,5 @@ export default class User extends BaseEntity {
     nullable: true,
     name: 'github_link',
   })
-  public githubLink: string;
+  public githubLink?: string;
 }

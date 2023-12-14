@@ -34,6 +34,8 @@ import TelegramCodeEntity from '../db/entities/telegram-code.entity';
 import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.request.message-data';
 import TelegramLoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.response.message-data';
 import MailSingleRequestMessageData from '../../../../libs/common/src/dto/notification-service/mail-single/mail-single.request.dto';
+import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.request.message-data';
+import FindUsersResponseMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.response.message-data';
 
 @Injectable()
 export class AuthService {
@@ -398,6 +400,50 @@ export class AuthService {
         created: user.created,
         updated: user.updated,
         githubLink: user.githubLink,
+      },
+    };
+  }
+
+  async findUsers(
+    dto: FindUsersRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<FindUsersResponseMessageData>> {
+    const { take, skip, tags, position, query } = dto;
+
+    const qb = User.createQueryBuilder('user');
+    if (tags) {
+      qb.andWhere(``);
+    }
+    if (position) {
+      qb.andWhere(`position = :position`, { position });
+    }
+    if (query) {
+      qb.andWhere(`email ILIKE :query OR full_name ILIKE :query`, {
+        query: `%${query}%`,
+      });
+    }
+    qb.take(take);
+    qb.skip(skip);
+
+    const [result, count] = await qb.getManyAndCount();
+
+    return {
+      success: true,
+      data: {
+        users: result.map((user) => {
+          return {
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            fullName: user.fullName,
+            isActive: user.isActive,
+            position: user.position,
+            created: user.created,
+            updated: user.updated,
+            githubLink: user.githubLink,
+          };
+        }),
+        take,
+        skip,
+        total: count,
       },
     };
   }

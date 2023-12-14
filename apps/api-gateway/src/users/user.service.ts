@@ -16,6 +16,8 @@ import ChangePasswordRequest from '../dto/auth/request/change-password.request';
 import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
 import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/rmq.response.message-template';
 import { NotificationService } from '../notification/api-gateway.notification.service';
+import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.request.message-data';
+import FindUsersResponseMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.response.message-data';
 
 const authQueue = 'auth_queue';
 const replyAuthQueue = 'auth_queue.reply';
@@ -141,6 +143,27 @@ export class UserService {
       data: dto,
       queue: authQueue,
       pattern: AuthServiceMessagePattern.getUser,
+      reply: {
+        replyTo: replyAuthQueue,
+        correlationId: uuid,
+      },
+    });
+
+    return new Promise((resolve) => {
+      this.eventEmitter.once(uuid, async (data) => {
+        resolve(JSON.parse(data));
+      });
+    });
+  }
+
+  async findUsers(
+    dto: FindUsersRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<FindUsersResponseMessageData>> {
+    const uuid = crypto.randomUUID();
+    await this.rabbitProducer.produce({
+      data: dto,
+      queue: authQueue,
+      pattern: AuthServiceMessagePattern.findUsers,
       reply: {
         replyTo: replyAuthQueue,
         correlationId: uuid,

@@ -33,6 +33,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import TelegramCodeEntity from '../db/entities/telegram-code.entity';
 import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.request.message-data';
 import TelegramLoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.response.message-data';
+import MailSingleRequestMessageData from '../../../../libs/common/src/dto/notification-service/mail-single/mail-single.request.dto';
 
 @Injectable()
 export class AuthService {
@@ -74,6 +75,20 @@ export class AuthService {
     const hashedPassword = await this.passwordToHash(originalPassword);
     user.password = hashedPassword;
     await User.save(user);
+
+    // TODO: Включить для демо
+    // const sendEmailData: MailSingleRequestMessageData = {
+    //   email: user.email,
+    //   body: `
+    //   <h1>Логин: ${user.email}</h1>
+    //   <h1>Пароль: ${originalPassword}</h1>`,
+    //   subject: 'Вы зарегистрированы в DevRel системе',
+    // };
+    // await this.producerService.produce({
+    //   data: sendEmailData,
+    //   queue: QueueName.notification_queue,
+    //   pattern: NotificationServiceMessagePattern.mailSingle,
+    // });
 
     return {
       success: true,
@@ -167,8 +182,15 @@ export class AuthService {
   async update(
     dto: UpdateUserRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<UpdateUserResponseMessageData>> {
-    const { email, fullName, birthday, phoneNumber, position, profilePic } =
-      dto;
+    const {
+      email,
+      fullName,
+      birthday,
+      phoneNumber,
+      position,
+      profilePic,
+      githubLink,
+    } = dto;
     const user = await User.findOne({
       where: {
         email: email,
@@ -210,6 +232,9 @@ export class AuthService {
     }
     if (fullName) {
       user.fullName = fullName;
+    }
+    if (githubLink) {
+      user.githubLink = githubLink;
     }
 
     await user.save();
@@ -372,6 +397,7 @@ export class AuthService {
         position: user.position,
         created: user.created,
         updated: user.updated,
+        githubLink: user.githubLink,
       },
     };
   }
@@ -427,7 +453,7 @@ export class AuthService {
         email: email,
       },
     });
-    if (!user) {
+    if (!user || user.isActive === false) {
       return {
         success: false,
         error: {

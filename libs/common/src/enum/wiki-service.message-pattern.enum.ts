@@ -1,4 +1,5 @@
 export enum WikiServiceMessagePattern {
     addArticle = 'addArticle',
-    approveArticle= 'approveArticle'
+    approveArticle= 'approveArticle',
+    rejectArticle = 'rejectArticle'
 }

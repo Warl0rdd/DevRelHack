@@ -10,6 +10,11 @@ import ApproveArticleResponseMessageData
   from "@app/common/dto/wiki-service/approve-article/approve-article.response.message-data";
 import Article from "./db/entities/article";
 import {ArticleStatus} from "@app/common/enum/wiki-service.article-status.enum";
+import RejectArticleRequestMessageData
+  from "@app/common/dto/wiki-service/reject-article/reject-article.request.message-data";
+import RejectArticleResponseMessageData
+  from "@app/common/dto/wiki-service/reject-article/reject-article.response.message-data";
+import {DateTime} from "luxon";
 
 @Injectable()
 export class WikiService {
@@ -74,6 +79,38 @@ export class WikiService {
               approved_by: saved.approved_by,
               created: saved.created,
               published: saved.published
+            }
+          }
+        })
+        .catch((err) => {
+          return {
+            success: false,
+            error: {
+              message: err,
+              statusCode: 400
+            }
+          }
+        });
+  }
+
+  async rejectArticle(dto: RejectArticleRequestMessageData): Promise<RMQResponseMessageTemplate<RejectArticleResponseMessageData>>  {
+    let articleOnModeration = await ArticleOnModeration.findOne({where: {
+        id: dto.id
+      }});
+    articleOnModeration.status = ArticleStatus.rejected;
+    return articleOnModeration.save()
+        .then((saved) => {
+          return {
+            success: true,
+            data: {
+              id: saved.id,
+              title: saved.title,
+              body: saved.body,
+              tags: saved.tags,
+              author_email: saved.author_email,
+              rejected_by: dto.rejected_by,
+              rejected_at: DateTime.now().toISOTime(),
+              created: saved.created
             }
           }
         })

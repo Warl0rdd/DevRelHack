@@ -5,6 +5,8 @@ import {WikiServiceMessagePattern} from "@app/common/enum/wiki-service.message-p
 import {getCorrelationIdFromRMQContext, getDataFromRMQContext, getReplyToFromRMQContext} from "@app/common";
 import AddArticleRequestMessageData from "@app/common/dto/wiki-service/create-article/add-article.request.message-data";
 import {RabbitProducerService} from "@app/rabbit-producer";
+import ApproveArticleRequestMessageData
+    from "@app/common/dto/wiki-service/approve-article/approve-article.request.message-data";
 
 @Controller()
 export default class WikiConsumer {
@@ -17,6 +19,22 @@ export default class WikiConsumer {
     public async addArticle(@Ctx() ctx: RmqContext) {
         const data = getDataFromRMQContext<AddArticleRequestMessageData>(ctx)
         const article = await this.wikiService.addArticle(data)
+
+        const replyTo = getReplyToFromRMQContext(ctx)
+        if (!replyTo) return
+
+        const correlationId = getCorrelationIdFromRMQContext(ctx)
+        await this.producer.reply({
+            data: article,
+            correlationId: correlationId,
+            replyQueue: replyTo
+        })
+    }
+
+    @MessagePattern(WikiServiceMessagePattern.approveArticle)
+    public async approveArticle(@Ctx() ctx: RmqContext) {
+        const data = getDataFromRMQContext<ApproveArticleRequestMessageData>(ctx);
+        const article = await this.wikiService.approveArticle(data);
 
         const replyTo = getReplyToFromRMQContext(ctx)
         if (!replyTo) return

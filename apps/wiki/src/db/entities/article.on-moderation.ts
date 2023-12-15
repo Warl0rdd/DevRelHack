@@ -20,6 +20,9 @@ export default class ArticleOnModeration extends BaseEntity {
     @Column()
     tags: string[];
 
+    @Column()
+    author_email: string;
+
     @Column({
         default: ArticleStatus.onModeration
     })

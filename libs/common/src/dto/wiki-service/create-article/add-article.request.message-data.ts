@@ -4,4 +4,6 @@ export default class AddArticleRequestMessageData {
     body: string;
 
     tags: string[];
+
+    author_email: string;
 }

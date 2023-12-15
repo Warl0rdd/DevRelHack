@@ -1,4 +1,4 @@
-export default class AddArticleResponseMessageData {
+export default class ApproveArticleResponseMessageData {
     id: number;
 
     title: string;
@@ -9,5 +9,9 @@ export default class AddArticleResponseMessageData {
 
     author_email: string;
 
+    approved_by: string;
+
     created: string;
+
+    published: string;
 }

@@ -19,6 +19,12 @@ export default class Article extends BaseEntity {
     @Column()
     tags: string[];
 
+    @Column()
+    author_email: string;
+
+    @Column()
+    approved_by: string;
+
     @Column({
         type: 'timestamptz'
     })

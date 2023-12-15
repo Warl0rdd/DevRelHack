@@ -1,6 +1,6 @@
 import {IsArray, IsString} from "class-validator";
 
-export default class CreateArticleDto {
+export default class AddArticleDto {
     @IsString()
     title: string;
 

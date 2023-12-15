@@ -19,6 +19,13 @@ export default class Article extends BaseEntity {
     @Column()
     tags: string[];
 
-    @CreateDateColumn({ type: 'timestamptz' })
+    @Column({
+        type: 'timestamptz'
+    })
     public created;
+
+    @CreateDateColumn({
+        type: 'timestamptz'
+    })
+    public published;
 }

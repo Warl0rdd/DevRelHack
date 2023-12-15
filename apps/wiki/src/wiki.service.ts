@@ -15,6 +15,10 @@ import RejectArticleRequestMessageData
 import RejectArticleResponseMessageData
   from "@app/common/dto/wiki-service/reject-article/reject-article.response.message-data";
 import {DateTime} from "luxon";
+import GetArticlesByTagsRequestMessageData
+  from "@app/common/dto/wiki-service/get-articles-by-tags/get-articles-by-tags.request.message-data";
+import GetArticlesByTagsResponseMessageData
+  from "@app/common/dto/wiki-service/get-articles-by-tags/get-articles-by-tags.response.message-data";
 
 @Injectable()
 export class WikiService {
@@ -123,5 +127,22 @@ export class WikiService {
             }
           }
         });
+  }
+
+  async getArticlesByTags(dto: GetArticlesByTagsRequestMessageData):
+      Promise<RMQResponseMessageTemplate<GetArticlesByTagsResponseMessageData>> {
+    let articles: Map<string, Article[]>;
+    for (const tag of dto.tags) {
+      articles.set(tag, await Article.createQueryBuilder()
+          .select()
+          .where(":tag = ANY(tags)", {tag: tag})
+          .getMany());
+    }
+    return {
+      success: true,
+      data: {
+        articles: articles
+      }
+    }
   }
 }

@@ -9,6 +9,8 @@ import ApproveArticleRequestMessageData
     from "@app/common/dto/wiki-service/approve-article/approve-article.request.message-data";
 import RejectArticleRequestMessageData
     from "@app/common/dto/wiki-service/reject-article/reject-article.request.message-data";
+import GetArticlesByTagsRequestMessageData
+    from "@app/common/dto/wiki-service/get-articles-by-tags/get-articles-by-tags.request.message-data";
 
 @Controller()
 export default class WikiConsumer {
@@ -53,6 +55,22 @@ export default class WikiConsumer {
     public async rejectArticle(@Ctx() ctx: RmqContext) {
         const data = getDataFromRMQContext<RejectArticleRequestMessageData>(ctx);
         const article = await this.wikiService.rejectArticle(data);
+
+        const replyTo = getReplyToFromRMQContext(ctx)
+        if (!replyTo) return
+
+        const correlationId = getCorrelationIdFromRMQContext(ctx)
+        await this.producer.reply({
+            data: article,
+            correlationId: correlationId,
+            replyQueue: replyTo
+        })
+    }
+
+    @MessagePattern(WikiServiceMessagePattern.getArticlesByTags)
+    public async getArticlesByTags(@Ctx() ctx: RmqContext) {
+        const data = getDataFromRMQContext<GetArticlesByTagsRequestMessageData>(ctx);
+        const article = await this.wikiService.getArticlesByTags(data);
 
         const replyTo = getReplyToFromRMQContext(ctx)
         if (!replyTo) return

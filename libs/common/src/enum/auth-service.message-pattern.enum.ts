@@ -9,4 +9,8 @@ export enum AuthServiceMessagePattern {
   addUserMultiple = 'addUserMultiple',
   getUser = 'getUser',
   changePassword = 'changePassword',
+  sendTelegramCode = 'sendTelegramCode',
+  loginTelegramCode = 'loginTelegramCode',
+  telegramLogin = 'telegramLogin',
+  findUsers = 'findUsers',
 }

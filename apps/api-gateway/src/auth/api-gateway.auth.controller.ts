@@ -18,17 +18,24 @@ import {
 import LoginDto from '../../../auth/src/auth/dto/login.dto';
 import LoginResponse from '../../../auth/src/auth/dto/login.response';
 import RefreshTokenResponse from '../dto/auth/response/refresh-token.response';
-import UpdateUserDto from '../dto/auth/request/update-user.dto';
 import UpdateUserResponse from '../dto/auth/response/update-user.response';
 import CheckTokenGuard from '../../../../libs/common/src/guard/check-token.guard';
 import ChangePasswordRequest from '../dto/auth/request/change-password.request';
 import UpdateProfileDto from '../dto/auth/request/update-profile.dto';
 import { User } from '../../../../libs/common/src/decorator/get-user.decorator';
+import SendTelegramCodeRequest from '../dto/auth/request/send-telegram-code.request';
+import UserAddTelegramDto from '../dto/notification/request/user-add-telegram.dto';
+import { NotificationService } from '../notification/api-gateway.notification.service';
+import JwtUserPayload from '../../../../libs/common/src/dto/common/jwt.payload';
+import TelegramLoginRequest from '../dto/auth/request/telegram-login.request';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class ApiGatewayAuthController {
-  constructor(private readonly apiGatewayService: ApiGatewayAuthService) {}
+  constructor(
+    private readonly apiGatewayService: ApiGatewayAuthService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   @ApiOperation({ summary: 'login' })
   @Post('login')
@@ -66,7 +73,6 @@ export class ApiGatewayAuthController {
     @Body() updateUserDto: UpdateProfileDto,
     @User() user: any,
   ) {
-    console.log(user);
     const result = (await this.apiGatewayService.updateProfile({
       email: user.email,
       ...updateUserDto,
@@ -108,5 +114,47 @@ export class ApiGatewayAuthController {
     })) as any;
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
+  }
+
+  @ApiOperation({ summary: 'Вход по коду из телеграмма' })
+  @Patch('login/telegram')
+  @HttpCode(200)
+  async loginTelegram(@Body() data: TelegramLoginRequest) {
+    const result = await this.apiGatewayService.telegramLogin(data);
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
+    return result.data;
+  }
+
+  @ApiOperation({ summary: 'Отправить код для входа телеграмм' })
+  @Patch('telegram/code')
+  @HttpCode(200)
+  async sendTelegramCode(@Body() data: SendTelegramCodeRequest) {
+    const result = (await this.apiGatewayService.sendTelegramCode({
+      email: data.email,
+    })) as any;
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(CheckTokenGuard)
+  @ApiOperation({
+    summary: 'Отправить запрос на добавление телеграмм аккаунта',
+  })
+  @Patch('telegram/add')
+  @HttpCode(200)
+  async addTelegramAccount(
+    @Body() data: UserAddTelegramDto,
+    @User() user: JwtUserPayload,
+  ) {
+    const result = (await this.notificationService.addUserTelegram({
+      email: user.email,
+      telegramName: data.telegramName,
+    })) as any;
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
+
+    return result.data;
   }
 }

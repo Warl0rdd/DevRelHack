@@ -12,4 +12,6 @@ export default class UpdateUserRequestMessageData {
   position?: UserPosition;
 
   profilePic?: string;
+
+  githubLink?: string;
 }

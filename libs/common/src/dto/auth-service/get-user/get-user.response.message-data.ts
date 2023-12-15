@@ -15,6 +15,8 @@ export default class GetUserResponseMessageData {
 
   position: UserPosition;
 
+  githubLink?: string;
+
   created: Date;
 
   updated: Date;

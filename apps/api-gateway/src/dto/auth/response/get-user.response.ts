@@ -29,4 +29,7 @@ export default class GetUserResponse {
 
   @ApiProperty({ example: 'some unix time string' })
   updated: Date;
+
+  @ApiProperty({ example: 'some base64 profile pic string' })
+  githubLink?: string;
 }

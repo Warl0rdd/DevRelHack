@@ -28,9 +28,6 @@ import UserModule from './user/user.module';
       },
       inject: [ConfigService],
     }),
-    RabbitReplyConsumerModule.forRoot(`amqp://user:password@localhost:5672`, [
-      'notification_queue.reply',
-    ]),
     RabbitProducerModule.forRoot(`amqp://user:password@localhost:5672`),
     EmailModule,
     TelegramModule,

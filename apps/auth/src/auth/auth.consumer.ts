@@ -16,6 +16,9 @@ import BlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-se
 import UnBlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/unblock-user/unblock-user.request.message-data';
 import GetUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/get-user/get-user.request.message-data';
 import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
+import SendTelegramCodeRequestMessageData from '../../../../libs/common/src/dto/auth-service/send-telegram-code/send-telegram-code.request.message-data';
+import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.request.message-data';
+import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.request.message-data';
 
 @Controller()
 export default class AuthConsumer {
@@ -140,6 +143,54 @@ export default class AuthConsumer {
   public async changePassword(@Ctx() ctx: RmqContext) {
     const data = getDataFromRMQContext<ChangePasswordRequestMessageData>(ctx);
     const result = await this.authService.changePassword(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.sendTelegramCode)
+  public async sendTelegramCode(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<SendTelegramCodeRequestMessageData>(ctx);
+    const result = await this.authService.sendTelegramCode(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.telegramLogin)
+  public async telegramLogin(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<TelegramLoginRequestMessageData>(ctx);
+    const result = await this.authService.telegramLogin(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.findUsers)
+  public async findUsers(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<FindUsersRequestMessageData>(ctx);
+    const result = await this.authService.findUsers(data);
 
     const replyto = getReplyToFromRMQContext(ctx);
     if (!replyto) return;

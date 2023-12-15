@@ -1,6 +1,8 @@
 export enum UserPosition {
-  DEVELOPER = 'developer',
-  TESTER = 'tester',
-  DEVREL = 'devrel',
-  USER = 'user',
+  TESTER = 'QA',
+  DEVREL = 'DEVREL',
+  BE_DEVELOPER = 'BE_DEVELOPER',
+  FE_DEVELOPER = 'FE_DEVELOPER',
+  ANALYTICS = 'ANALYTICS',
+  PROJECT_MANAGER = 'PROJECT_MANAGER',
 }

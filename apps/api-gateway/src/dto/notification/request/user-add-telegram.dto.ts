@@ -1,12 +1,12 @@
-import {IsEmail, IsString} from "class-validator";
-import {ApiProperty} from "@nestjs/swagger";
+import { IsEmail, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export default class UserAddTelegramDto {
-    @IsEmail()
-    @ApiProperty({ example: 'john@mail.com' })
-    email: string;
+  @IsString()
+  @ApiProperty({ example: '@JohnMuhomor' })
+  telegramName: string;
 
-    @IsString()
-    @ApiProperty({ example: '@JohnMuhomor' })
-    telegramName: string;
+  @ApiProperty({ example: 'john@mail.com' })
+  @IsEmail()
+  email: string;
 }

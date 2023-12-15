@@ -20,4 +20,6 @@ export default class UpdateUserResponseMessageData {
   updated: Date;
 
   githubLink?: string;
+
+  tags?: string[];
 }

@@ -19,12 +19,14 @@ import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/au
 import SendTelegramCodeRequestMessageData from '../../../../libs/common/src/dto/auth-service/send-telegram-code/send-telegram-code.request.message-data';
 import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.request.message-data';
 import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.request.message-data';
+import TagService from './tag.service';
 
 @Controller()
 export default class AuthConsumer {
   constructor(
     private readonly authService: AuthService,
     private readonly producer: RabbitProducerService,
+    private readonly tagService: TagService,
   ) {}
 
   @MessagePattern(AuthServiceMessagePattern.login)
@@ -191,6 +193,21 @@ export default class AuthConsumer {
   public async findUsers(@Ctx() ctx: RmqContext) {
     const data = getDataFromRMQContext<FindUsersRequestMessageData>(ctx);
     const result = await this.authService.findUsers(data);
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.getTags)
+  public async getTags(@Ctx() ctx: RmqContext) {
+    const result = await this.tagService.getAllTags();
 
     const replyto = getReplyToFromRMQContext(ctx);
     if (!replyto) return;

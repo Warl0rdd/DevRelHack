@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpException,
   Patch,
@@ -85,7 +86,7 @@ export class ApiGatewayAuthController {
   @ApiBearerAuth()
   @UseGuards(CheckTokenGuard)
   @ApiOperation({ summary: 'Get profile' })
-  @Post('self')
+  @Get('self')
   @ApiResponse({ type: UpdateUserResponse })
   @HttpCode(200)
   async getSelf(@Req() request: Request) {
@@ -116,8 +117,20 @@ export class ApiGatewayAuthController {
       throw new HttpException(result.error.message, result.error.statusCode);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(CheckTokenGuard)
+  @ApiOperation({ summary: 'Получить подсказки по тэгам для пользователя' })
+  @Get('tags')
+  @HttpCode(200)
+  async getTags() {
+    const result = await this.apiGatewayService.getTags();
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
+    return result.data.tags;
+  }
+
   @ApiOperation({ summary: 'Вход по коду из телеграмма' })
-  @Patch('login/telegram')
+  @Post('login/telegram')
   @HttpCode(200)
   async loginTelegram(@Body() data: TelegramLoginRequest) {
     const result = await this.apiGatewayService.telegramLogin(data);
@@ -127,12 +140,10 @@ export class ApiGatewayAuthController {
   }
 
   @ApiOperation({ summary: 'Отправить код для входа телеграмм' })
-  @Patch('telegram/code')
+  @Post('telegram/code')
   @HttpCode(200)
   async sendTelegramCode(@Body() data: SendTelegramCodeRequest) {
-    const result = (await this.apiGatewayService.sendTelegramCode({
-      email: data.email,
-    })) as any;
+    const result = (await this.apiGatewayService.sendTelegramCode(data)) as any;
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
   }

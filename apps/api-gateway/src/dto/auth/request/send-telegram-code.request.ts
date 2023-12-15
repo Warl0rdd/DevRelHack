@@ -4,5 +4,5 @@ import { IsEmail } from 'class-validator';
 export default class SendTelegramCodeRequest {
   @IsEmail()
   @ApiProperty()
-  email: string;
+  telegramName: string;
 }

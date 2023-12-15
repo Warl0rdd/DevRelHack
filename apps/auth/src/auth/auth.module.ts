@@ -11,6 +11,9 @@ import { RabbitProducerModule } from '../../../../libs/rabbit-producer/src';
 import TelegramCodeEntity from '../db/entities/telegram-code.entity';
 import { RabbitReplyConsumerModule } from '../../../../libs/rabbit-reply-consumer/src';
 import { QueueName } from '../../../../libs/common/src';
+import TagEntity from '../db/entities/tags.entity';
+import TagService from './tag.service';
+import NotificationAdapterService from './notification.service';
 
 @Module({
   imports: [
@@ -25,7 +28,7 @@ import { QueueName } from '../../../../libs/common/src';
         const dbConfig = config.get('typeorm');
         return {
           ...dbConfig,
-          entities: [User, TelegramCodeEntity],
+          entities: [User, TelegramCodeEntity, TagEntity],
           synchronize: true,
         };
       },
@@ -37,6 +40,6 @@ import { QueueName } from '../../../../libs/common/src';
     ]),
   ],
   controllers: [AuthConsumer],
-  providers: [AuthService],
+  providers: [AuthService, TagService, NotificationAdapterService],
 })
 export class AuthModule {}

@@ -33,9 +33,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import TelegramCodeEntity from '../db/entities/telegram-code.entity';
 import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.request.message-data';
 import TelegramLoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.response.message-data';
-import MailSingleRequestMessageData from '../../../../libs/common/src/dto/notification-service/mail-single/mail-single.request.dto';
 import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.request.message-data';
 import FindUsersResponseMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.response.message-data';
+import TagService from './tag.service';
+import NotificationAdapterService from './notification.service';
 
 @Injectable()
 export class AuthService {
@@ -43,6 +44,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly producerService: RabbitProducerService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly tagService: TagService,
+    private readonly notificationService: NotificationAdapterService,
   ) {}
 
   async passwordToHash(pass: string): Promise<string> {
@@ -192,6 +195,7 @@ export class AuthService {
       position,
       profilePic,
       githubLink,
+      tags,
     } = dto;
     const user = await User.findOne({
       where: {
@@ -238,6 +242,10 @@ export class AuthService {
     if (githubLink) {
       user.githubLink = githubLink;
     }
+    if (tags) {
+      const tagEntities = await this.tagService.addMissingTags(dto.tags);
+      user.tags = tagEntities;
+    }
 
     await user.save();
 
@@ -250,6 +258,7 @@ export class AuthService {
         position: user.position,
         created: user.created,
         updated: user.updated,
+        tags: user.tags ? user.tags.map((data) => data.name) : [],
       },
     };
   }
@@ -378,6 +387,7 @@ export class AuthService {
       where: {
         email: email,
       },
+      relations: ['tags'],
     });
     if (!user) {
       return {
@@ -400,6 +410,7 @@ export class AuthService {
         created: user.created,
         updated: user.updated,
         githubLink: user.githubLink,
+        tags: user.tags ? user.tags.map((data) => data.name) : [],
       },
     };
   }
@@ -493,10 +504,19 @@ export class AuthService {
   async sendTelegramCode(
     dto: SendTelegramCodeRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<null>> {
-    const { email } = dto;
+    const { telegramName } = dto;
+    const userByTelegramResponse =
+      await this.notificationService.getUserEmailByTelegramName(telegramName);
+    if (userByTelegramResponse.success === false) {
+      return {
+        success: false,
+        error: userByTelegramResponse.error,
+      };
+    }
+    const email = userByTelegramResponse.data.email;
     const user = await User.findOne({
       where: {
-        email: email,
+        email,
       },
     });
     if (!user || user.isActive === false) {
@@ -554,7 +574,16 @@ export class AuthService {
   async telegramLogin(
     dto: TelegramLoginRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<TelegramLoginResponseMessageData>> {
-    const { email } = dto;
+    const { telegramName } = dto;
+    const userByTelegramResponse =
+      await this.notificationService.getUserEmailByTelegramName(telegramName);
+    if (userByTelegramResponse.success === false) {
+      return {
+        success: false,
+        error: userByTelegramResponse.error,
+      };
+    }
+    const email = userByTelegramResponse.data.email;
     const telegramCode = await TelegramCodeEntity.findOne({
       where: {
         email: email,
@@ -580,7 +609,7 @@ export class AuthService {
     }
     const user = await User.findOne({
       where: {
-        email: dto.email,
+        email: email,
       },
     });
 
@@ -603,6 +632,7 @@ export class AuthService {
       position: user.position,
     });
 
+    console.log(user);
     return {
       success: true,
       data: tokens,

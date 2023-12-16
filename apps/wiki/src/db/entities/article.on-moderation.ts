@@ -23,8 +23,9 @@ export default class ArticleOnModeration extends BaseEntity {
   })
   body: string;
 
-  @Column({ type: String, array: true })
-  tags: string[];
+  // Fuck typeorm
+  @Column("varchar", { array: true })
+  tags: any;
 
   @Column()
   author_email: string;
@@ -35,13 +36,15 @@ export default class ArticleOnModeration extends BaseEntity {
   moderated_by: string;
 
   @Column({
-    default: ArticleStatus.onModeration,
+      type: "enum",
+      enum: ArticleStatus,
+      default: ArticleStatus.onModeration,
   })
   status: ArticleStatus;
 
   @CreateDateColumn({ type: 'timestamptz' })
   public created;
 
-  @Column()
+  @Column({type: 'timestamptz'})
   public moderated_at;
 }

@@ -5,4 +5,5 @@ export enum NotificationServiceMessagePattern {
   userAddTelegram = 'userAddTelegram',
   telegramMultiple = 'telegramMultiple',
   mailMultiple = 'mailMultiple',
+  getUserByTelegramName = 'getUserByTelegramName',
 }

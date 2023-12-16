@@ -20,4 +20,6 @@ export default class GetUserResponseMessageData {
   created: Date;
 
   updated: Date;
+
+  tags?: string[];
 }

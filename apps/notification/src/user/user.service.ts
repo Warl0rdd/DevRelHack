@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import User from '../db/entities/user.entity';
 import TelegramAccount from '../db/entities/telegram-account.entity';
 import { TelegramAccountStatusEnum } from '../telegram/telegram.account-status.enum';
@@ -6,6 +6,7 @@ import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/r
 import UserAddTelegramResponseMessageData from '../../../../libs/common/src/dto/notification-service/user-add-telegram/user-add-telegram.response';
 import { HttpStatusCode } from 'axios';
 import { randomInt } from 'crypto';
+import GetUserByTelegramResponseMessageData from '../../../../libs/common/src/dto/notification-service/get-user-by-telegram/get-user-by-telegram.response';
 
 @Injectable()
 export default class UserService {
@@ -70,6 +71,31 @@ export default class UserService {
         email: email,
         telegramName,
         code,
+      },
+    };
+  }
+
+  public async getUserByTelegramName(
+    telegramName: string,
+  ): Promise<RMQResponseMessageTemplate<GetUserByTelegramResponseMessageData>> {
+    const telegramAccountExists = await TelegramAccount.findOne({
+      where: { telegramName },
+      relations: ['user'],
+    });
+    if (!telegramAccountExists) {
+      return {
+        success: false,
+        error: {
+          message: 'Пользователь не найден',
+          statusCode: HttpStatus.NOT_FOUND,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        email: telegramAccountExists.user.email,
       },
     };
   }

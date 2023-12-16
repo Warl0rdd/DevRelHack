@@ -8,5 +8,5 @@ export default class TelegramLoginRequest {
 
   @ApiProperty()
   @IsString()
-  email: string;
+  telegramName: string;
 }

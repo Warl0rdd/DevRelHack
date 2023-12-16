@@ -3,6 +3,7 @@ import { ApiGatewayAuthModule } from './auth/api-gateway.auth.module';
 import { ConfigModule } from '@nestjs/config';
 import UserModule from './users/user.module';
 import {ApiGatewayWikiModule} from "./wiki/api-gateway.wiki.module";
+import AnalyticsModule from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -11,7 +12,8 @@ import {ApiGatewayWikiModule} from "./wiki/api-gateway.wiki.module";
     }),
     ApiGatewayAuthModule,
     UserModule,
-    ApiGatewayWikiModule
+    ApiGatewayWikiModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [],

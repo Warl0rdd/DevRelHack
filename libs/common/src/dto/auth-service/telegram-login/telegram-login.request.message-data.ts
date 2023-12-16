@@ -1,5 +1,5 @@
 export default class TelegramLoginRequestMessageData {
-  public email: string;
+  public telegramName: string;
 
   public code: string;
 }

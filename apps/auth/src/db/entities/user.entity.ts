@@ -3,10 +3,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserPosition } from '../../../../../libs/common/src/enum/user.position.enum';
+import TagEntity from './tags.entity';
 
 @Entity('auth_users')
 export default class User extends BaseEntity {
@@ -55,7 +58,6 @@ export default class User extends BaseEntity {
   })
   position: UserPosition;
 
-  // Path to pfp
   @Column({
     type: 'varchar',
     nullable: true,
@@ -75,4 +77,8 @@ export default class User extends BaseEntity {
     name: 'github_link',
   })
   public githubLink?: string;
+
+  @ManyToMany(() => TagEntity, {})
+  @JoinTable({ name: 'tag_user' })
+  public tags: TagEntity[];
 }

@@ -20,6 +20,8 @@ class FindUsersUserData {
   created: Date;
 
   updated: Date;
+
+  tags: string[];
 }
 
 export default class FindUsersResponseMessageData {

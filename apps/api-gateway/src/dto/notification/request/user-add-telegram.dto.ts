@@ -5,4 +5,8 @@ export default class UserAddTelegramDto {
   @IsString()
   @ApiProperty({ example: '@JohnMuhomor' })
   telegramName: string;
+
+  @ApiProperty({ example: 'john@mail.com' })
+  @IsEmail()
+  email: string;
 }

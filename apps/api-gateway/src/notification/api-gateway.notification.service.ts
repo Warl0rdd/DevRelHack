@@ -34,7 +34,7 @@ export class NotificationService {
     });
   }
 
-  async addUserTelegram(dto: UserAddTelegramRequestMessageData) {
+  async addUserTelegram(dto: UserAddTelegramDto) {
     const uuid = crypto.randomUUID();
     await this.rabbitProducer.produce({
       data: dto,

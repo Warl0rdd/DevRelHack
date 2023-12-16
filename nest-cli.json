@@ -70,6 +70,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/jwt/tsconfig.lib.json"
       }
+    },
+    "wiki": {
+      "type": "application",
+      "root": "apps/wiki",
+      "entryFile": "main",
+      "sourceRoot": "apps/wiki/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/wiki/tsconfig.app.json"
+      }
     }
   }
 }

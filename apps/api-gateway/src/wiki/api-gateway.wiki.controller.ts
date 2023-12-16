@@ -1,4 +1,15 @@
-import {Body, Controller, HttpCode, HttpException, HttpStatus, Post, UseGuards} from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpException,
+    HttpStatus,
+    Param,
+    Post, Req,
+    UseGuards
+} from "@nestjs/common";
 import {ApiBearerAuth, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {ApiGatewayWikiService} from "./api-gateway.wiki.service";
 import AddArticleResponseDto from "../dto/wiki/add-article/add-article.response.dto";
@@ -13,6 +24,9 @@ import RejectArticleResponseDto from "../dto/wiki/reject-article/reject-article.
 import RejectArticleRequestDto from "../dto/wiki/reject-article/reject-article.request.dto";
 import GetArticlesByTagsResponseDto from "../dto/wiki/get-articles-by-tags/get-articles-by-tags.response.dto";
 import GetArticlesByTagsRequestDto from "../dto/wiki/get-articles-by-tags/get-articles-by-tags.request.dto";
+import {Request} from "express";
+import GetArticlesResponseDto from "../dto/wiki/get-articles/get-articles.response.dto";
+import GetArticlesByNameResponseDto from "../dto/wiki/get-articles-by-name/get-articles-by-name.response.dto";
 
 @ApiTags('Wiki')
 @Controller('wiki')
@@ -74,5 +88,69 @@ export class ApiGatewayWikiController {
         if (!result.success)
             throw new HttpException(result.error.message, result.error.statusCode);
         return result.data;
+    }
+
+    @ApiOperation({ summary: 'delete an article (devrel)' })
+    @Delete('delete/:id')
+    @HttpCode(204)
+    @ApiBearerAuth()
+    @UseGuards(CheckTokenGuard)
+    async deleteArticle(@Param('id') id: number, @User() user: JwtUserPayload) {
+        if (user.position != UserPosition.DEVREL) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED)
+        if(!id) throw new HttpException('', 400)
+        const result = (await this.service.deleteArticle({id: id})) as any;
+        if (!result.success)
+            throw new HttpException(result.error.message, result.error.statusCode);
+    }
+    //TODO: swagger
+    @ApiOperation({ summary: 'get an articles w/ pagination' })
+    @Get('get-articles')
+    @HttpCode(200)
+    @ApiBearerAuth()
+    @ApiResponse({ type: GetArticlesResponseDto })
+    @UseGuards(CheckTokenGuard)
+    async getArticles(@Req() req: Request) {
+        if(!req.rawHeaders['max'] || !req.rawHeaders['start']) throw new HttpException('Invalid headers!', 400)
+        const result = (await this.service.getArticles({
+            start: parseInt(req.rawHeaders['start']),
+            max: parseInt(req.rawHeaders['max'])
+        })) as any;
+        if (!result.success)
+            throw new HttpException(result.error.message, result.error.statusCode);
+        return result
+    }
+
+    //TODO: swagger
+    @ApiOperation({ summary: 'get an articles by name' })
+    @Get('get-articles/:name')
+    @HttpCode(200)
+    @ApiBearerAuth()
+    @ApiResponse({ type: GetArticlesByNameResponseDto })
+    @UseGuards(CheckTokenGuard)
+    async getArticlesByName(@Param('name') name: string) {
+        const result = (await this.service.getArticlesByName({
+            name: name
+        })) as any;
+        if (!result.success)
+            throw new HttpException(result.error.message, result.error.statusCode);
+        return result
+    }
+
+    //TODO: swagger
+    @ApiOperation({ summary: 'get an articles w/ pagination' })
+    @Get('get-articles/on-moderation')
+    @HttpCode(200)
+    @ApiBearerAuth()
+    @ApiResponse({ type: GetArticlesResponseDto })
+    @UseGuards(CheckTokenGuard)
+    async getArticlesOnModeration(@Req() req: Request) {
+        if(!req.rawHeaders['max'] || !req.rawHeaders['start']) throw new HttpException('Invalid headers!', 400)
+        const result = (await this.service.getArticlesOnModeration({
+            start: parseInt(req.rawHeaders['start']),
+            max: parseInt(req.rawHeaders['max'])
+        })) as any;
+        if (!result.success)
+            throw new HttpException(result.error.message, result.error.statusCode);
+        return result
     }
 }

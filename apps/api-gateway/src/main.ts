@@ -19,6 +19,9 @@ async function bootstrap() {
   SwaggerModule.setup(swaggerPostfix, app, document);
 
   app.useGlobalPipes(new ValidationPipe());
+  app.enableCors({
+    origin: '*',
+  });
   await app.listen(3000);
 
   const url = await app.getUrl();

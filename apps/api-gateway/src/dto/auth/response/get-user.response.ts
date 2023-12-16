@@ -32,4 +32,7 @@ export default class GetUserResponse {
 
   @ApiProperty({ example: 'some base64 profile pic string' })
   githubLink?: string;
+
+  @ApiProperty({ example: [] })
+  tags?: string[];
 }

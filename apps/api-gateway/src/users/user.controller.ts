@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpException,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -26,6 +27,7 @@ import { CheckRoleGuard } from '../../../../libs/common/src';
 import FindUsersFilterQuery, {
   PaginationQuery,
 } from '../dto/auth/request/find-users.request';
+import UpdateUserDto from '../dto/auth/request/update-user.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -100,5 +102,17 @@ export default class UsersController {
     const result = (await this.userService.unblockUser(unblockUserDto)) as any;
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
+  @ApiOperation({ summary: 'Update user' })
+  @Patch('update-user')
+  @HttpCode(202)
+  async updateUser(@Body() dto: UpdateUserDto) {
+    const result = await this.userService.updateUser(dto);
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
+    return result.data;
   }
 }

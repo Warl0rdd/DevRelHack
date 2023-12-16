@@ -33,4 +33,9 @@ export default class UpdateProfileDto {
   @IsOptional()
   @ApiProperty()
   githubLink?: string;
+
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiProperty({ isArray: true })
+  tags?: string[];
 }

@@ -18,25 +18,25 @@ import TelegramMultipleDto from '../dto/notification/request/telegram-multiple.d
 export class NotificationController {
   constructor(private readonly apiGatewayService: NotificationService) {}
 
-  @ApiOperation({ summary: 'subscribe user to notifications' })
-  @Post('/add-user')
-  @HttpCode(202)
-  async addUser(@Body() addUserDto: AddUserDto) {
-    const result = (await this.apiGatewayService.addUser(addUserDto)) as any;
-    if (!result.success)
-      throw new HttpException(result.error.message, result.error.statusCode);
-  }
+  // @ApiOperation({ summary: 'subscribe user to notifications' })
+  // @Post('/add-user')
+  // @HttpCode(202)
+  // async addUser(@Body() addUserDto: AddUserDto) {
+  //   const result = (await this.apiGatewayService.addUser(addUserDto)) as any;
+  //   if (!result.success)
+  //     throw new HttpException(result.error.message, result.error.statusCode);
+  // }
 
-  @ApiOperation({ summary: 'subscribe user to telegram notifications' })
-  @Post('/add-user-telegram')
-  @HttpCode(202)
-  async addUserTelegram(@Body() addUserTelegramDto: UserAddTelegramDto) {
-    const result = (await this.apiGatewayService.addUserTelegram(
-      addUserTelegramDto,
-    )) as any;
-    if (!result.success)
-      throw new HttpException(result.error.message, result.error.statusCode);
-  }
+  // @ApiOperation({ summary: 'subscribe user to telegram notifications' })
+  // @Post('/add-user-telegram')
+  // @HttpCode(202)
+  // async addUserTelegram(@Body() addUserTelegramDto: UserAddTelegramDto) {
+  //   const result = (await this.apiGatewayService.addUserTelegram(
+  //     addUserTelegramDto,
+  //   )) as any;
+  //   if (!result.success)
+  //     throw new HttpException(result.error.message, result.error.statusCode);
+  // }
 
   @ApiOperation({ summary: 'mail a single user' })
   @Post('/mail-single')

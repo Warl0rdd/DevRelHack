@@ -13,6 +13,8 @@ import SendTelegramCodeRequest from '../dto/auth/request/send-telegram-code.requ
 import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.request.message-data';
 import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/rmq.response.message-template';
 import TelegramLoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.response.message-data';
+import GetTagsResponseMessageData from '../../../../libs/common/src/dto/auth-service/get-tags/get-tags.response.message-data';
+import SendTelegramCodeRequestMessageData from '../../../../libs/common/src/dto/auth-service/send-telegram-code/send-telegram-code.request.message-data';
 
 const authQueue = 'auth_queue';
 const replyAuthQueue = 'auth_queue.reply';
@@ -119,7 +121,7 @@ export class ApiGatewayAuthService {
     });
   }
 
-  async sendTelegramCode(dto: SendTelegramCodeRequest) {
+  async sendTelegramCode(dto: SendTelegramCodeRequestMessageData) {
     const uuid = crypto.randomUUID();
     await this.rabbitProducer.produce({
       data: dto,
@@ -146,6 +148,27 @@ export class ApiGatewayAuthService {
       data: dto,
       queue: QueueName.auth_queue,
       pattern: AuthServiceMessagePattern.telegramLogin,
+      reply: {
+        replyTo: replyAuthQueue,
+        correlationId: uuid,
+      },
+    });
+
+    return new Promise((resolve) => {
+      this.eventEmitter.once(uuid, async (data) => {
+        resolve(JSON.parse(data));
+      });
+    });
+  }
+
+  async getTags(): Promise<
+    RMQResponseMessageTemplate<GetTagsResponseMessageData>
+  > {
+    const uuid = crypto.randomUUID();
+    await this.rabbitProducer.produce({
+      data: {},
+      queue: authQueue,
+      pattern: AuthServiceMessagePattern.getTags,
       reply: {
         replyTo: replyAuthQueue,
         correlationId: uuid,

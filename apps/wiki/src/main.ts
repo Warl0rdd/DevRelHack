@@ -17,7 +17,7 @@ async function bootstrap() {
         urls: [`amqp://${user}:${password}@localhost:5672`],
         queue: 'wiki_queue',
         queueOptions: {
-          durable: false,
+          durable: true,
         },
       },
     },

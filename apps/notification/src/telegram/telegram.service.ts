@@ -21,7 +21,7 @@ export default class TelegramService {
   ];
   private bot: TelegramBot = null;
   constructor() {
-    this.initBot();
+    // this.initBot();
   }
 
   private initBot() {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import User from '../db/entities/user.entity';
+import UserEntity from '../db/entities/user.entity';
 import { UserPosition } from '../../../../libs/common/src/enum/user.position.enum';
 import GetPositionAnalyticsResponseMessageData from '../../../../libs/common/src/dto/auth-service/get-position-analytics/get-position-analytics.response.message-data';
 import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/rmq.response.message-template';
@@ -10,38 +10,38 @@ export default class AnalyticsService {
   public async getUserAnalytics(): Promise<
     RMQResponseMessageTemplate<GetPositionAnalyticsResponseMessageData>
   > {
-    const total = await User.count();
-    const totalAnalysts = await User.count({
+    const total = await UserEntity.count();
+    const totalAnalysts = await UserEntity.count({
       where: {
         position: UserPosition.ANALYTICS,
       },
     });
-    const totalFrontend = await User.count({
+    const totalFrontend = await UserEntity.count({
       where: {
         position: UserPosition.FE_DEVELOPER,
       },
     });
-    const totalBackend = await User.count({
+    const totalBackend = await UserEntity.count({
       where: {
         position: UserPosition.BE_DEVELOPER,
       },
     });
-    const totalDevrels = await User.count({
+    const totalDevrels = await UserEntity.count({
       where: {
         position: UserPosition.DEVREL,
       },
     });
-    const totalProjectManagers = await User.count({
+    const totalProjectManagers = await UserEntity.count({
       where: {
         position: UserPosition.PROJECT_MANAGER,
       },
     });
-    const totalUnassigned = await User.count({
+    const totalUnassigned = await UserEntity.count({
       where: {
         position: UserPosition.UNASSIGNED,
       },
     });
-    const totalTesters = await User.count({
+    const totalTesters = await UserEntity.count({
       where: {
         position: UserPosition.TESTER,
       },
@@ -68,7 +68,7 @@ export default class AnalyticsService {
     const mostPopularTags: {
       tag_name: string;
       user_count: number;
-    }[] = await User.query(`
+    }[] = await UserEntity.query(`
 	SELECT tag.name as tag_name, COUNT(*) as user_count FROM tag LEFT JOIN  tag_user 
 	ON tag_user."tagName" = tag.name
 	WHERE EXISTS(

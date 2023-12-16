@@ -4,7 +4,7 @@ import JwtModule from '../jwt/jwt.module';
 import { typeormConfig } from '../config/typeorm.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import User from '../db/entities/user.entity';
+import UserEntity from '../db/entities/user.entity';
 import { jwtConfig } from '../config/jwt.config';
 import AuthConsumer from './auth.consumer';
 import { RabbitProducerModule } from '../../../../libs/rabbit-producer/src';
@@ -15,6 +15,7 @@ import TagEntity from '../db/entities/tags.entity';
 import TagService from './tag.service';
 import NotificationAdapterService from './notification.service';
 import AnalyticsService from './analytics.service';
+import WorkExperienceEntity from '../db/entities/work-experience.entity';
 
 @Module({
   imports: [
@@ -29,7 +30,12 @@ import AnalyticsService from './analytics.service';
         const dbConfig = config.get('typeorm');
         return {
           ...dbConfig,
-          entities: [User, TelegramCodeEntity, TagEntity],
+          entities: [
+            UserEntity,
+            TelegramCodeEntity,
+            TagEntity,
+            WorkExperienceEntity,
+          ],
           synchronize: true,
         };
       },

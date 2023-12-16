@@ -5,7 +5,7 @@ export default class UpdateUserRequestMessageData {
 
   fullName?: string;
 
-  birthday?: string;
+  birthday?: Date;
 
   phoneNumber?: string;
 

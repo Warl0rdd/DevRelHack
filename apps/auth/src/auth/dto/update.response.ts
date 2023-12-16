@@ -1,14 +1,9 @@
-import {ApiProperty} from "@nestjs/swagger";
-import UserResponse from "./user.response";
-import User from "../../db/entities/user.entity";
+import { ApiProperty } from '@nestjs/swagger';
+import UserResponse from './user.response';
 
 export default class UpdateResponse {
-    constructor(user: User) {
-        this.updatedUser = user
-    }
-
-    @ApiProperty({
-        type: UserResponse
-    })
-    public updatedUser: UserResponse
+  @ApiProperty({
+    type: UserResponse,
+  })
+  public updatedUser: UserResponse;
 }

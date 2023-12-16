@@ -16,4 +16,5 @@ export enum AuthServiceMessagePattern {
   getTags = 'getTags',
   getMostPopularTags = 'getMostPopularTags',
   getUserAnalytics = 'getUserAnalytics',
+  register = 'register',
 }

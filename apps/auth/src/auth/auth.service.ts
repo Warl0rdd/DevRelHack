@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import User from '../db/entities/user.entity';
+import UserEntity from '../db/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import JwtService from '../jwt/jwt.service';
 import {
@@ -20,7 +20,9 @@ import BlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-se
 import UnBlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/unblock-user/unblock-user.request.message-data';
 import { UserPosition } from '../../../../libs/common/src/enum/user.position.enum';
 import GetUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/get-user/get-user.request.message-data';
-import GetUserResponseMessageData from '../../../../libs/common/src/dto/auth-service/get-user/get-user.response.message-data';
+import GetUserResponseMessageData, {
+  WorkExpByPosition,
+} from '../../../../libs/common/src/dto/auth-service/get-user/get-user.response.message-data';
 import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
 import SendTelegramCodeRequestMessageData from '../../../../libs/common/src/dto/auth-service/send-telegram-code/send-telegram-code.request.message-data';
 import { RabbitProducerService } from '../../../../libs/rabbit-producer/src';
@@ -37,6 +39,10 @@ import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-se
 import FindUsersResponseMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.response.message-data';
 import TagService from './tag.service';
 import NotificationAdapterService from './notification.service';
+import RegisterRequestMessageData from '../../../../libs/common/src/dto/auth-service/register/register.request';
+import RegisterResponseMessageData from '../../../../libs/common/src/dto/auth-service/register/register.response';
+import WorkExperienceEntity from '../db/entities/work-experience.entity';
+import { msToDurationStr } from '../helper/ms-to-duration-str';
 
 @Injectable()
 export class AuthService {
@@ -53,56 +59,12 @@ export class AuthService {
     return bcrypt.hash(pass, salt);
   }
 
-  async validatePassword(pass: string, user: User): Promise<boolean> {
+  async validatePassword(pass: string, user: UserEntity): Promise<boolean> {
     return bcrypt.compare(pass, user.password);
   }
 
-  async addUser(
-    dto: AddUserRequestMessageData,
-  ): Promise<RMQResponseMessageTemplate<AddUserResponseMessageData>> {
-    const userExists = await User.findOne({
-      where: {
-        email: dto.email,
-      },
-    });
-    if (userExists) {
-      return {
-        success: false,
-        error: {
-          message: '',
-          statusCode: HttpStatus.BAD_REQUEST,
-        },
-      };
-    }
-    let user = new User();
-    user.email = dto.email;
-    const originalPassword = randomBytes(6).toString('hex');
-    const hashedPassword = await this.passwordToHash(originalPassword);
-    user.password = hashedPassword;
-    await User.save(user);
-
-    // TODO: Включить для демо
-    // const sendEmailData: MailSingleRequestMessageData = {
-    //   email: user.email,
-    //   body: `
-    //   <h1>Логин: ${user.email}</h1>
-    //   <h1>Пароль: ${originalPassword}</h1>`,
-    //   subject: 'Вы зарегистрированы в DevRel системе',
-    // };
-    // await this.producerService.produce({
-    //   data: sendEmailData,
-    //   queue: QueueName.notification_queue,
-    //   pattern: NotificationServiceMessagePattern.mailSingle,
-    // });
-
-    return {
-      success: true,
-      data: { email: user.email, password: originalPassword },
-    };
-  }
-
   async addRootUser(): Promise<void> {
-    const user = new User();
+    const user = new UserEntity();
     user.email = process.env.ROOT_EMAIL;
     user.password = await this.passwordToHash(process.env.ROOT_PASSWORD);
     user.position = UserPosition.DEVREL;
@@ -116,7 +78,7 @@ export class AuthService {
     if (this.checkIsRootUser(dto.email)) {
       const { password } = dto;
       if (password === process.env.ROOT_PASSWORD) {
-        let rootUser = await User.findOne({
+        let rootUser = await UserEntity.findOne({
           where: {
             email: dto.email,
           },
@@ -126,7 +88,7 @@ export class AuthService {
           await this.addRootUser();
         }
 
-        rootUser = await User.findOne({
+        rootUser = await UserEntity.findOne({
           where: {
             email: dto.email,
           },
@@ -145,7 +107,7 @@ export class AuthService {
       }
     }
 
-    const user = await User.findOne({
+    const user = await UserEntity.findOne({
       where: {
         email: dto.email,
       },
@@ -197,7 +159,7 @@ export class AuthService {
       githubLink,
       tags,
     } = dto;
-    const user = await User.findOne({
+    const user = await UserEntity.findOne({
       where: {
         email: email,
       },
@@ -267,7 +229,7 @@ export class AuthService {
     dto: BlockUserRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<BlockUserRequestMessageData>> {
     const { email } = dto;
-    const user = await User.findOne({
+    const user = await UserEntity.findOne({
       where: {
         email: email,
       },
@@ -304,7 +266,7 @@ export class AuthService {
     dto: UnBlockUserRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<BlockUserRequestMessageData>> {
     const { email } = dto;
-    const user = await User.findOne({
+    const user = await UserEntity.findOne({
       where: {
         email: email,
       },
@@ -383,11 +345,11 @@ export class AuthService {
     dto: GetUserRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<GetUserResponseMessageData>> {
     const { email } = dto;
-    const user = await User.findOne({
+    const user = await UserEntity.findOne({
       where: {
         email: email,
       },
-      relations: ['tags'],
+      relations: ['tags', 'workExperience'],
     });
     if (!user) {
       return {
@@ -399,6 +361,46 @@ export class AuthService {
       };
     }
 
+    let workExperienceTotalMilliseconds = 0;
+
+    let workExpByPosition: WorkExpByPosition[] = [];
+    if (user.workExperience) {
+      const workYearsByPositionMap = new Map<UserPosition, WorkExpByPosition>();
+      for (const experience of user.workExperience) {
+        const duration = experience.endDate
+          ? experience.endDate.getTime() - experience.startDate.getTime()
+          : Date.now() - experience.startDate.getTime();
+
+        workExperienceTotalMilliseconds += duration;
+        const mapData = workYearsByPositionMap.get(experience.position);
+        if (mapData) {
+          workYearsByPositionMap.set(experience.position, {
+            position: experience.position,
+            workExperienceMilliseconds:
+              mapData.workExperienceMilliseconds + duration,
+            workExperienceString: '',
+          });
+        } else {
+          workYearsByPositionMap.set(experience.position, {
+            position: experience.position,
+            workExperienceMilliseconds: duration,
+            workExperienceString: '',
+          });
+        }
+      }
+
+      for (const [key, value] of workYearsByPositionMap) {
+        let workExperienceString = msToDurationStr(
+          value.workExperienceMilliseconds,
+        );
+
+        workExpByPosition.push({ ...value, workExperienceString });
+      }
+    }
+
+    const workExperienceTotalString = msToDurationStr(
+      workExperienceTotalMilliseconds,
+    );
     return {
       success: true,
       data: {
@@ -411,6 +413,19 @@ export class AuthService {
         updated: user.updated,
         githubLink: user.githubLink,
         tags: user.tags ? user.tags.map((data) => data.name) : [],
+        workExperience: user.workExperience
+          ? user.workExperience.map((data) => {
+              return {
+                company: data.company,
+                startDate: data.startDate,
+                endDate: data.endDate,
+                position: data.position,
+              };
+            })
+          : [],
+        workExperienceTotalString: workExperienceTotalString,
+        workExperienceTotalMilliseconds: workExperienceTotalMilliseconds,
+        workExpByPosition: workExpByPosition,
       },
     };
   }
@@ -420,7 +435,7 @@ export class AuthService {
   ): Promise<RMQResponseMessageTemplate<FindUsersResponseMessageData>> {
     const { take, skip, tags, position, query } = dto;
 
-    const qb = User.createQueryBuilder('user');
+    const qb = UserEntity.createQueryBuilder('user');
     qb.leftJoinAndSelect('user.tags', 'tags');
     if (tags) {
       qb.andWhere(``);
@@ -465,7 +480,7 @@ export class AuthService {
     dto: ChangePasswordRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<null>> {
     const { email, oldPassword, newPassword } = dto;
-    const user = await User.findOne({
+    const user = await UserEntity.findOne({
       where: {
         email: email,
       },
@@ -516,7 +531,7 @@ export class AuthService {
       };
     }
     const email = userByTelegramResponse.data.email;
-    const user = await User.findOne({
+    const user = await UserEntity.findOne({
       where: {
         email,
       },
@@ -609,7 +624,7 @@ export class AuthService {
         },
       };
     }
-    const user = await User.findOne({
+    const user = await UserEntity.findOne({
       where: {
         email: email,
       },
@@ -638,6 +653,95 @@ export class AuthService {
     return {
       success: true,
       data: tokens,
+    };
+  }
+
+  async register(
+    dto: RegisterRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<RegisterResponseMessageData>> {
+    const userExists = await UserEntity.findOne({
+      where: {
+        email: dto.email,
+      },
+    });
+    if (userExists) {
+      return {
+        success: false,
+        error: {
+          message: 'Данный email уже занят!',
+          statusCode: HttpStatus.BAD_REQUEST,
+        },
+      };
+    }
+
+    const {
+      email,
+      password,
+      fullName,
+      birthday,
+      phoneNumber,
+      position,
+      profilePic,
+      tags,
+      workExperience,
+    } = dto;
+
+    let user = new UserEntity();
+    user.email = email;
+    const originalPassword = password;
+    const hashedPassword = await this.passwordToHash(originalPassword);
+    user.password = hashedPassword;
+
+    if (fullName) {
+      user.fullName = fullName;
+    }
+    if (birthday) {
+      user.birthday = birthday;
+    }
+    if (phoneNumber) {
+      user.phoneNumber = phoneNumber;
+    }
+    if (position) {
+      user.position = position;
+    }
+    if (profilePic) {
+      user.profilePic = profilePic;
+    }
+    if (tags) {
+      const tagEntities = await this.tagService.addMissingTags(dto.tags);
+      user.tags = tagEntities;
+    }
+    if (workExperience) {
+      const workExperienceEntities = workExperience.map((item) => {
+        const entity = new WorkExperienceEntity();
+        entity.company = item.company;
+        entity.startDate = item.startDate;
+        entity.endDate = item.endDate;
+        entity.position = item.position;
+        return entity;
+      });
+
+      user.workExperience = workExperienceEntities;
+    }
+    await UserEntity.save(user);
+
+    // TODO: Включить для демо
+    // const sendEmailData: MailSingleRequestMessageData = {
+    //   email: user.email,
+    //   body: `
+    //   <h1>Логин: ${user.email}</h1>
+    //   <h1>Пароль: ${originalPassword}</h1>`,
+    //   subject: 'Вы зарегистрированы в DevRel системе',
+    // };
+    // await this.producerService.produce({
+    //   data: sendEmailData,
+    //   queue: QueueName.notification_queue,
+    //   pattern: NotificationServiceMessagePattern.mailSingle,
+    // });
+
+    return {
+      success: true,
+      data: { email: user.email, password: originalPassword },
     };
   }
 

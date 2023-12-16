@@ -5,14 +5,16 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserPosition } from '../../../../../libs/common/src/enum/user.position.enum';
 import TagEntity from './tags.entity';
+import WorkExperienceEntity from './work-experience.entity';
 
 @Entity('auth_users')
-export default class User extends BaseEntity {
+export default class UserEntity extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -32,12 +34,11 @@ export default class User extends BaseEntity {
   })
   fullName: string;
 
-  // YYYY-MM-DD
   @Column({
     type: 'timestamptz',
     nullable: true,
   })
-  birthday: string;
+  birthday: Date;
 
   @Column({
     default: true,
@@ -49,12 +50,11 @@ export default class User extends BaseEntity {
     nullable: true,
     name: 'phone_number',
   })
-  phoneNumber: string;
+  phoneNumber?: string;
 
   @Column({
     type: 'enum',
     enum: UserPosition,
-    default: UserPosition.FE_DEVELOPER,
   })
   position: UserPosition;
 
@@ -64,12 +64,6 @@ export default class User extends BaseEntity {
     name: 'profile_pic',
   })
   profilePic: string;
-
-  @CreateDateColumn({ type: 'timestamptz' })
-  public created;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  public updated;
 
   @Column({
     type: 'varchar',
@@ -81,4 +75,15 @@ export default class User extends BaseEntity {
   @ManyToMany(() => TagEntity, {})
   @JoinTable({ name: 'tag_user' })
   public tags: TagEntity[];
+
+  @OneToMany(() => WorkExperienceEntity, (work) => work.user, {
+    cascade: true,
+  })
+  public workExperience: WorkExperienceEntity[];
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  public created;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  public updated;
 }

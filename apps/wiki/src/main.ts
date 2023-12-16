@@ -3,7 +3,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { config } from 'dotenv';
 import {WikiModule} from "./wiki.module";
 config({
-  path: '.env.auth',
+  path: '.env.wiki',
 });
 
 async function bootstrap() {

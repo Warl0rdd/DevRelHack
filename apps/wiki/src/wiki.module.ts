@@ -4,8 +4,9 @@ import WikiConsumer from "./wiki.consumer";
 import {ConfigModule, ConfigService} from "@nestjs/config";
 import {typeormConfig} from "./config/typeorm.config";
 import {TypeOrmModule} from "@nestjs/typeorm";
-import User from "../../auth/src/db/entities/user.entity";
 import {RabbitProducerModule} from "@app/rabbit-producer";
+import Article from "./db/entities/article";
+import ArticleOnModeration from "./db/entities/article.on-moderation";
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import {RabbitProducerModule} from "@app/rabbit-producer";
         imports: [ConfigModule],
         useFactory: (config: ConfigService) => {
           const dbConfig = config.get('typeorm');
-          return { ...dbConfig, entities: [User], synchronize: true };
+          return { ...dbConfig, entities: [Article, ArticleOnModeration], synchronize: true };
         },
         inject: [ConfigService],
       }),

@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserPosition } from '../../../../../../libs/common/src/enum/user.position.enum';
+import WorkExperienceResponse from './work-experience.response';
+import WorkExperienceByPositionResponse from './work-experience-by-position.response';
 
 export default class GetUserResponse {
   @ApiProperty({ example: 'john@mail.com' })
@@ -35,4 +37,16 @@ export default class GetUserResponse {
 
   @ApiProperty({ example: [] })
   tags?: string[];
+
+  @ApiProperty({ type: WorkExperienceResponse })
+  workExperience: WorkExperienceResponse[];
+
+  @ApiProperty()
+  workExperienceTotalString: string;
+
+  @ApiProperty()
+  workExperienceTotalMilliseconds: number;
+
+  @ApiProperty({ type: WorkExperienceByPositionResponse })
+  workExpByPosition: WorkExperienceByPositionResponse[];
 }

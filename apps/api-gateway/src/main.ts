@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { config } from 'dotenv';
 import { ApiGatewayModule } from './api-gateway.module';
 config();
@@ -18,6 +18,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(swaggerPostfix, app, document);
 
+  app.useGlobalPipes(new ValidationPipe());
   await app.listen(3000);
 
   const url = await app.getUrl();

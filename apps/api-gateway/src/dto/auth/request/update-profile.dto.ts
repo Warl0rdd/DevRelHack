@@ -4,8 +4,11 @@ import {
   IsOptional,
   IsPhoneNumber,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { WorkExperienceDto } from './register.request';
 
 export default class UpdateProfileDto {
   @IsString()
@@ -17,7 +20,7 @@ export default class UpdateProfileDto {
   @IsDate()
   @IsOptional()
   @ApiProperty({ example: '2000-01-01' })
-  birthday?: string;
+  birthday?: Date;
 
   @IsPhoneNumber()
   @IsOptional()
@@ -38,4 +41,9 @@ export default class UpdateProfileDto {
   @IsOptional()
   @ApiProperty({ isArray: true })
   tags?: string[];
+
+  @ApiProperty({ type: WorkExperienceDto, isArray: true })
+  @Type(() => WorkExperienceDto)
+  @ValidateNested({ each: true })
+  workExperience?: WorkExperienceDto[];
 }

@@ -1,4 +1,9 @@
 import { UserPosition } from '../../../enum/user.position.enum';
+import { WorkExpByPosition } from '../get-user/get-user.response.message-data';
+import {
+  WorkExperienceDto,
+  WorkExperienceResponseDto,
+} from '../register/register.request';
 
 export default class UpdateUserResponseMessageData {
   fullName?: string;
@@ -22,4 +27,12 @@ export default class UpdateUserResponseMessageData {
   githubLink?: string;
 
   tags?: string[];
+
+  workExperience: WorkExperienceResponseDto[];
+
+  workExperienceTotalString: string;
+
+  workExperienceTotalMilliseconds: number;
+
+  workExpByPosition: WorkExpByPosition[];
 }

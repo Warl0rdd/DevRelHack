@@ -29,6 +29,7 @@ import UserAddTelegramDto from '../dto/notification/request/user-add-telegram.dt
 import { NotificationService } from '../notification/api-gateway.notification.service';
 import JwtUserPayload from '../../../../libs/common/src/dto/common/jwt.payload';
 import TelegramLoginRequest from '../dto/auth/request/telegram-login.request';
+import RegisterRequest from '../dto/auth/request/register.request';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -37,6 +38,17 @@ export class ApiGatewayAuthController {
     private readonly apiGatewayService: ApiGatewayAuthService,
     private readonly notificationService: NotificationService,
   ) {}
+
+  @ApiOperation({ summary: 'Register' })
+  @Post('register')
+  @ApiResponse({ type: LoginResponse })
+  @HttpCode(200)
+  async register(@Body() dto: RegisterRequest) {
+    const result = await this.apiGatewayService.register(dto);
+    if (!result.success)
+      throw new HttpException(result.error.message, result.error.statusCode);
+    return result.data;
+  }
 
   @ApiOperation({ summary: 'login' })
   @Post('login')
@@ -118,7 +130,6 @@ export class ApiGatewayAuthController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard)
   @ApiOperation({ summary: 'Получить подсказки по тэгам для пользователя' })
   @Get('tags')
   @HttpCode(200)

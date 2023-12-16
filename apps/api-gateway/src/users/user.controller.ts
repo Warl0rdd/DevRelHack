@@ -20,7 +20,6 @@ import AddUserMultipleDto from '../dto/auth/request/add-user-multiple.dto';
 import AddUserDto from '../dto/auth/request/add-user.dto';
 import BlockUserDto from '../dto/auth/request/block-user.dto';
 import UnblockUserDto from '../dto/auth/request/unblock-user.dto';
-import AddUserResponseDto from '../dto/auth/response/add-user.response';
 import { UserService } from './user.service';
 import { UserPosition } from '../../../../libs/common/src/enum/user.position.enum';
 import { CheckRoleGuard } from '../../../../libs/common/src';
@@ -51,19 +50,6 @@ export default class UsersController {
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
 
-    return result.data;
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
-  @ApiOperation({ summary: 'add user' })
-  @Post('add-user')
-  @ApiResponse({ type: AddUserResponseDto })
-  @HttpCode(201)
-  async addUser(@Body() addUserDto: AddUserDto) {
-    const result = (await this.userService.addUser(addUserDto)) as any;
-    if (!result.success)
-      throw new HttpException(result.error.message, result.error.statusCode);
     return result.data;
   }
 

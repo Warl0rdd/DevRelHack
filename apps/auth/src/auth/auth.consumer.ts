@@ -9,7 +9,6 @@ import {
 import { AuthService } from './auth.service';
 import LoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/login/login.request.message-data';
 import { RabbitProducerService } from '../../../../libs/rabbit-producer/src';
-import AddUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/add-user/add-user.request.message-data';
 import RefreshTokenRequestMessageData from '../../../../libs/common/src/dto/auth-service/refresh-token/refresh-token.request.message-data';
 import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.request.message-data';
 import BlockUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/block-user/block-user.request.message-data copy';
@@ -21,6 +20,7 @@ import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/aut
 import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.request.message-data';
 import TagService from './tag.service';
 import AnalyticsService from './analytics.service';
+import RegisterRequestMessageData from '../../../../libs/common/src/dto/auth-service/register/register.request';
 
 @Controller()
 export default class AuthConsumer {
@@ -68,22 +68,6 @@ export default class AuthConsumer {
     const data = getDataFromRMQContext<UpdateUserRequestMessageData>(ctx);
     const result = await this.authService.update(data);
 
-    const replyto = getReplyToFromRMQContext(ctx);
-    if (!replyto) return;
-
-    const correlationId = getCorrelationIdFromRMQContext(ctx);
-    await this.producer.reply({
-      data: result,
-      replyQueue: replyto,
-      correlationId,
-    });
-  }
-
-  @MessagePattern(AuthServiceMessagePattern.addUser)
-  public async addUser(@Ctx() ctx: RmqContext) {
-    const data = getDataFromRMQContext<AddUserRequestMessageData>(ctx);
-    const result = await this.authService.addUser(data);
-    console.log(result);
     const replyto = getReplyToFromRMQContext(ctx);
     if (!replyto) return;
 
@@ -240,6 +224,22 @@ export default class AuthConsumer {
   @MessagePattern(AuthServiceMessagePattern.getUserAnalytics)
   public async getPositionAnalytics(@Ctx() ctx: RmqContext) {
     const result = await this.analyticsService.getUserAnalytics();
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.register)
+  public async register(@Ctx() ctx: RmqContext) {
+    const data = getDataFromRMQContext<RegisterRequestMessageData>(ctx);
+    const result = await this.authService.register(data);
 
     const replyto = getReplyToFromRMQContext(ctx);
     if (!replyto) return;

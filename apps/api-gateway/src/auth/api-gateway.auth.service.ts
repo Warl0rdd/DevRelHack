@@ -5,7 +5,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AuthServiceMessagePattern, QueueName } from '@app/common';
 import LoginDto from '../../../auth/src/auth/dto/login.dto';
 import RefreshTokenDto from '../dto/auth/request/refresh-token.dto';
-import UpdateUserDto from '../dto/auth/request/update-user.dto';
 import GetUserRequest from '../dto/auth/request/get-user.request';
 import ChangePasswordRequestMessageData from '../../../../libs/common/src/dto/auth-service/change-password/change-password.request.message-data';
 import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.request.message-data';
@@ -15,6 +14,9 @@ import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/r
 import TelegramLoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.response.message-data';
 import GetTagsResponseMessageData from '../../../../libs/common/src/dto/auth-service/get-tags/get-tags.response.message-data';
 import SendTelegramCodeRequestMessageData from '../../../../libs/common/src/dto/auth-service/send-telegram-code/send-telegram-code.request.message-data';
+import RegisterResponseMessageData from '../../../../libs/common/src/dto/auth-service/register/register.response';
+import { NotificationService } from '../notification/api-gateway.notification.service';
+import RegisterRequestMessageData from '../../../../libs/common/src/dto/auth-service/register/register.request';
 
 const authQueue = 'auth_queue';
 const replyAuthQueue = 'auth_queue.reply';
@@ -24,7 +26,40 @@ export class ApiGatewayAuthService {
   constructor(
     private readonly rabbitProducer: RabbitProducerService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly notificationService: NotificationService,
   ) {}
+
+  async register(
+    dto: RegisterRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<RegisterResponseMessageData>> {
+    const uuid = crypto.randomUUID();
+    await this.rabbitProducer.produce({
+      data: dto,
+      queue: authQueue,
+      pattern: AuthServiceMessagePattern.register,
+      reply: {
+        replyTo: replyAuthQueue,
+        correlationId: uuid,
+      },
+    });
+
+    const result: RMQResponseMessageTemplate<RegisterResponseMessageData> =
+      await new Promise((resolve) => {
+        this.eventEmitter.once(uuid, async (data) => {
+          resolve(JSON.parse(data));
+        });
+      });
+
+    if (!result.success) {
+      return result;
+    }
+
+    await this.notificationService.addUser({
+      email: dto.email,
+    });
+
+    return result;
+  }
 
   async login(dto: LoginDto) {
     const uuid = crypto.randomUUID();

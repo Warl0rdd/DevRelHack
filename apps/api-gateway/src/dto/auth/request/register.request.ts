@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserPosition } from '../../../../../../libs/common/src/enum/user.position.enum';
@@ -62,5 +63,6 @@ export default class RegisterRequest {
 
   @ApiProperty({ type: WorkExperienceDto, isArray: true })
   @Type(() => WorkExperienceDto)
+  @ValidateNested({ each: true })
   workExperience?: WorkExperienceDto[];
 }

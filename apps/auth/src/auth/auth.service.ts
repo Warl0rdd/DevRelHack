@@ -6,9 +6,7 @@ import {
   JWT_EXPIRE_ACCESS_TOKEN,
   JWT_EXPIRE_REFRESH_TOKEN,
 } from '../jwt/jwt.const';
-import AddUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/add-user/add-user.request.message-data';
-import AddUserResponseMessageData from '../../../../libs/common/src/dto/auth-service/add-user/add-user.response.message-data';
-import { randomBytes, randomInt, randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/rmq.response.message-template';
 import LoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/login/login.request.message-data';
 import LoginResponseMessageData from '../../../../libs/common/src/dto/auth-service/login/login.response.message-data';
@@ -43,6 +41,7 @@ import RegisterRequestMessageData from '../../../../libs/common/src/dto/auth-ser
 import RegisterResponseMessageData from '../../../../libs/common/src/dto/auth-service/register/register.response';
 import WorkExperienceEntity from '../db/entities/work-experience.entity';
 import { msToDurationStr } from '../helper/ms-to-duration-str';
+import { In } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -158,11 +157,13 @@ export class AuthService {
       profilePic,
       githubLink,
       tags,
+      workExperience,
     } = dto;
     const user = await UserEntity.findOne({
       where: {
         email: email,
       },
+      relations: ['tags', 'workExperience'],
     });
     if (!user || user.isActive === false) {
       return {
@@ -182,6 +183,11 @@ export class AuthService {
           position: user.position,
           created: user.created,
           updated: user.updated,
+          tags: [],
+          workExperience: [],
+          workExperienceTotalString: '',
+          workExperienceTotalMilliseconds: 0,
+          workExpByPosition: [],
         },
       };
     }
@@ -208,19 +214,47 @@ export class AuthService {
       const tagEntities = await this.tagService.addMissingTags(dto.tags);
       user.tags = tagEntities;
     }
+    if (workExperience) {
+      const oldWork = user.workExperience;
+      await WorkExperienceEntity.delete({
+        id: In(oldWork.map((item) => item.id)),
+      });
+      const workExperienceEntities = workExperience.map((item) => {
+        const entity = new WorkExperienceEntity();
+        entity.company = item.company;
+        entity.startDate = item.startDate;
+        entity.endDate = item.endDate;
+        entity.position = item.position;
+        return entity;
+      });
+
+      user.workExperience = workExperienceEntities;
+    }
 
     await user.save();
 
+    const {
+      workExpByPosition,
+      workExperience: workExperienceResponse,
+      workExperienceTotalMilliseconds,
+      workExperienceTotalString,
+    } = this.getWorkExp(user);
     return {
       success: true,
       data: {
         email: user.email,
         phoneNumber: user.phoneNumber,
+        fullName: user.fullName,
         isActive: user.isActive,
         position: user.position,
         created: user.created,
         updated: user.updated,
+        githubLink: user.githubLink,
         tags: user.tags ? user.tags.map((data) => data.name) : [],
+        workExperience: workExperienceResponse,
+        workExperienceTotalString: workExperienceTotalString,
+        workExperienceTotalMilliseconds: workExperienceTotalMilliseconds,
+        workExpByPosition: workExpByPosition,
       },
     };
   }
@@ -361,46 +395,13 @@ export class AuthService {
       };
     }
 
-    let workExperienceTotalMilliseconds = 0;
-
-    let workExpByPosition: WorkExpByPosition[] = [];
-    if (user.workExperience) {
-      const workYearsByPositionMap = new Map<UserPosition, WorkExpByPosition>();
-      for (const experience of user.workExperience) {
-        const duration = experience.endDate
-          ? experience.endDate.getTime() - experience.startDate.getTime()
-          : Date.now() - experience.startDate.getTime();
-
-        workExperienceTotalMilliseconds += duration;
-        const mapData = workYearsByPositionMap.get(experience.position);
-        if (mapData) {
-          workYearsByPositionMap.set(experience.position, {
-            position: experience.position,
-            workExperienceMilliseconds:
-              mapData.workExperienceMilliseconds + duration,
-            workExperienceString: '',
-          });
-        } else {
-          workYearsByPositionMap.set(experience.position, {
-            position: experience.position,
-            workExperienceMilliseconds: duration,
-            workExperienceString: '',
-          });
-        }
-      }
-
-      for (const [key, value] of workYearsByPositionMap) {
-        let workExperienceString = msToDurationStr(
-          value.workExperienceMilliseconds,
-        );
-
-        workExpByPosition.push({ ...value, workExperienceString });
-      }
-    }
-
-    const workExperienceTotalString = msToDurationStr(
+    const {
+      workExpByPosition,
+      workExperience,
       workExperienceTotalMilliseconds,
-    );
+      workExperienceTotalString,
+    } = this.getWorkExp(user);
+
     return {
       success: true,
       data: {
@@ -413,16 +414,7 @@ export class AuthService {
         updated: user.updated,
         githubLink: user.githubLink,
         tags: user.tags ? user.tags.map((data) => data.name) : [],
-        workExperience: user.workExperience
-          ? user.workExperience.map((data) => {
-              return {
-                company: data.company,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                position: data.position,
-              };
-            })
-          : [],
+        workExperience: workExperience,
         workExperienceTotalString: workExperienceTotalString,
         workExperienceTotalMilliseconds: workExperienceTotalMilliseconds,
         workExpByPosition: workExpByPosition,
@@ -747,5 +739,73 @@ export class AuthService {
 
   private checkIsRootUser(email: string) {
     return email === process.env.ROOT_EMAIL;
+  }
+
+  private getWorkExp(user: UserEntity) {
+    let workExperienceTotalMilliseconds = 0;
+
+    let workExpByPosition: WorkExpByPosition[] = [];
+    if (user.workExperience) {
+      const workYearsByPositionMap = new Map<UserPosition, WorkExpByPosition>();
+      for (const experience of user.workExperience) {
+        const duration = experience.endDate
+          ? new Date(experience.endDate).getTime() -
+            new Date(experience.startDate).getTime()
+          : Date.now() - new Date(experience.startDate).getTime();
+
+        workExperienceTotalMilliseconds += duration;
+        const mapData = workYearsByPositionMap.get(experience.position);
+        if (mapData) {
+          workYearsByPositionMap.set(experience.position, {
+            position: experience.position,
+            workExperienceMilliseconds:
+              mapData.workExperienceMilliseconds + duration,
+            workExperienceString: '',
+          });
+        } else {
+          workYearsByPositionMap.set(experience.position, {
+            position: experience.position,
+            workExperienceMilliseconds: duration,
+            workExperienceString: '',
+          });
+        }
+      }
+
+      for (const [key, value] of workYearsByPositionMap) {
+        let workExperienceString = msToDurationStr(
+          value.workExperienceMilliseconds,
+        );
+
+        workExpByPosition.push({ ...value, workExperienceString });
+      }
+    }
+
+    const workExperienceTotalString = msToDurationStr(
+      workExperienceTotalMilliseconds,
+    );
+
+    return {
+      workExperienceTotalMilliseconds,
+      workExperienceTotalString,
+      workExpByPosition,
+      workExperience: user.workExperience
+        ? user.workExperience.map((data) => {
+            const duration = data.endDate
+              ? new Date(data.endDate).getTime() -
+                new Date(data.startDate).getTime()
+              : Date.now() - new Date(data.startDate).getTime();
+
+            let workExperienceString = msToDurationStr(duration);
+            return {
+              company: data.company,
+              startDate: data.startDate,
+              endDate: data.endDate,
+              position: data.position,
+              workExperienceString,
+              workExperienceMilliseconds: duration,
+            };
+          })
+        : [],
+    };
   }
 }

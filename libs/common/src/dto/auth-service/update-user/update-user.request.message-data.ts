@@ -1,4 +1,5 @@
 import { UserPosition } from '../../../enum/user.position.enum';
+import { WorkExperienceDto } from '../register/register.request';
 
 export default class UpdateUserRequestMessageData {
   email: string;
@@ -16,4 +17,6 @@ export default class UpdateUserRequestMessageData {
   githubLink?: string;
 
   tags?: string[];
+
+  workExperience?: WorkExperienceDto[];
 }

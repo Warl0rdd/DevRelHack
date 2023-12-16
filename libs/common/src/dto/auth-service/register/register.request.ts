@@ -10,6 +10,20 @@ export class WorkExperienceDto {
   public endDate?: Date;
 }
 
+export class WorkExperienceResponseDto {
+  public company: string;
+
+  public startDate: Date;
+
+  public position: UserPosition;
+
+  public endDate?: Date;
+
+  public workExperienceString: string;
+
+  public workExperienceMilliseconds: number;
+}
+
 export default class RegisterRequestMessageData {
   email: string;
 

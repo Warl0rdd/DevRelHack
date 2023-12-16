@@ -1,5 +1,8 @@
 import { UserPosition } from '../../../enum/user.position.enum';
-import { WorkExperienceDto } from '../register/register.request';
+import {
+  WorkExperienceDto,
+  WorkExperienceResponseDto,
+} from '../register/register.request';
 
 export class WorkExpByPosition {
   position: UserPosition;
@@ -30,7 +33,7 @@ export default class GetUserResponseMessageData {
 
   tags: string[];
 
-  workExperience: WorkExperienceDto[];
+  workExperience: WorkExperienceResponseDto[];
 
   workExperienceTotalString: string;
 

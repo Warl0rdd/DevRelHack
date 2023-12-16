@@ -421,6 +421,7 @@ export class AuthService {
     const { take, skip, tags, position, query } = dto;
 
     const qb = User.createQueryBuilder('user');
+    qb.leftJoinAndSelect('user.tags', 'tags');
     if (tags) {
       qb.andWhere(``);
     }
@@ -450,6 +451,7 @@ export class AuthService {
             created: user.created,
             updated: user.updated,
             githubLink: user.githubLink,
+            tags: user.tags ? user.tags.map((item) => item.name) : [],
           };
         }),
         take,

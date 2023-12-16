@@ -20,6 +20,7 @@ import SendTelegramCodeRequestMessageData from '../../../../libs/common/src/dto/
 import TelegramLoginRequestMessageData from '../../../../libs/common/src/dto/auth-service/telegram-login/telegram-login.request.message-data';
 import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.request.message-data';
 import TagService from './tag.service';
+import AnalyticsService from './analytics.service';
 
 @Controller()
 export default class AuthConsumer {
@@ -27,6 +28,7 @@ export default class AuthConsumer {
     private readonly authService: AuthService,
     private readonly producer: RabbitProducerService,
     private readonly tagService: TagService,
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   @MessagePattern(AuthServiceMessagePattern.login)
@@ -208,6 +210,36 @@ export default class AuthConsumer {
   @MessagePattern(AuthServiceMessagePattern.getTags)
   public async getTags(@Ctx() ctx: RmqContext) {
     const result = await this.tagService.getAllTags();
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.getMostPopularTags)
+  public async getMostPopularTags(@Ctx() ctx: RmqContext) {
+    const result = await this.analyticsService.getMostPopularTags();
+
+    const replyto = getReplyToFromRMQContext(ctx);
+    if (!replyto) return;
+
+    const correlationId = getCorrelationIdFromRMQContext(ctx);
+    await this.producer.reply({
+      data: result,
+      replyQueue: replyto,
+      correlationId,
+    });
+  }
+
+  @MessagePattern(AuthServiceMessagePattern.getUserAnalytics)
+  public async getPositionAnalytics(@Ctx() ctx: RmqContext) {
+    const result = await this.analyticsService.getUserAnalytics();
 
     const replyto = getReplyToFromRMQContext(ctx);
     if (!replyto) return;

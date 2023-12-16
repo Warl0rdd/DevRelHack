@@ -14,4 +14,6 @@ export enum AuthServiceMessagePattern {
   telegramLogin = 'telegramLogin',
   findUsers = 'findUsers',
   getTags = 'getTags',
+  getMostPopularTags = 'getMostPopularTags',
+  getUserAnalytics = 'getUserAnalytics',
 }

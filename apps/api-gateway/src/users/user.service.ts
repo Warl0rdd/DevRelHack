@@ -18,6 +18,8 @@ import RMQResponseMessageTemplate from '../../../../libs/common/src/dto/common/r
 import { NotificationService } from '../notification/api-gateway.notification.service';
 import FindUsersRequestMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.request.message-data';
 import FindUsersResponseMessageData from '../../../../libs/common/src/dto/auth-service/find-users/find-users.response.message-data';
+import UpdateUserRequestMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.request.message-data';
+import UpdateUserResponseMessageData from '../../../../libs/common/src/dto/auth-service/update-user/update-user.response.message-data';
 
 const authQueue = 'auth_queue';
 const replyAuthQueue = 'auth_queue.reply';
@@ -118,7 +120,9 @@ export class UserService {
     });
   }
 
-  async updateUser(dto: UpdateUserDto) {
+  async updateUser(
+    dto: UpdateUserRequestMessageData,
+  ): Promise<RMQResponseMessageTemplate<UpdateUserResponseMessageData>> {
     const uuid = crypto.randomUUID();
     await this.rabbitProducer.produce({
       data: dto,

@@ -14,6 +14,7 @@ import { QueueName } from '../../../../libs/common/src';
 import TagEntity from '../db/entities/tags.entity';
 import TagService from './tag.service';
 import NotificationAdapterService from './notification.service';
+import AnalyticsService from './analytics.service';
 
 @Module({
   imports: [
@@ -40,6 +41,11 @@ import NotificationAdapterService from './notification.service';
     ]),
   ],
   controllers: [AuthConsumer],
-  providers: [AuthService, TagService, NotificationAdapterService],
+  providers: [
+    AuthService,
+    TagService,
+    NotificationAdapterService,
+    AnalyticsService,
+  ],
 })
 export class AuthModule {}

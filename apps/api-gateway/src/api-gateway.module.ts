@@ -5,6 +5,7 @@ import UserModule from './users/user.module';
 import { ApiGatewayWikiModule } from './wiki/api-gateway.wiki.module';
 import AnalyticsModule from './analytics/analytics.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
         index: false,
       },
     }),
+    EventsModule,
   ],
   controllers: [],
   providers: [],

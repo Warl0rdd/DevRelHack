@@ -1,21 +1,28 @@
-import {BaseEntity, Column, Entity, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn} from "typeorm";
-import Speaker from "./speaker";
-import Timeline from "./timeline";
-import {JoinTable} from "typeorm/browser";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  ManyToMany,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import SpeakerEntity from './speaker';
+import TimelineEntity from './timeline';
+import { JoinTable } from 'typeorm/browser';
 
 @Entity('events')
-export default class Event extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+export default class EventEntity extends BaseEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    title: string;
+  @Column()
+  title: string;
 
-    @OneToMany(() => Timeline, (timeline) => timeline.event)
-    timelines: Timeline[];
+  @OneToMany(() => TimelineEntity, (timeline) => timeline.event)
+  timelines: TimelineEntity[];
 
-    @ManyToMany(() => Speaker, (speaker) => speaker.events)
-    @JoinTable()
-    speakers: Speaker[];
-
+  @ManyToMany(() => SpeakerEntity, (speaker) => speaker.events)
+  @JoinTable()
+  speakers: SpeakerEntity[];
 }

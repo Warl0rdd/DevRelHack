@@ -18,7 +18,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(swaggerPostfix, app, document);
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({ whitelist: false, forbidUnknownValues: false }),
+  );
   app.enableCors({
     origin: '*',
   });

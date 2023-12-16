@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export default class SendTelegramCodeRequest {
-  @IsEmail()
+  @IsString()
   @ApiProperty()
   telegramName: string;
 }

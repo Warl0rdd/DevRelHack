@@ -7,11 +7,14 @@ import {
   Patch,
   Post,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiGatewayAuthService } from './api-gateway.auth.service';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -30,6 +33,8 @@ import { NotificationService } from '../notification/api-gateway.notification.se
 import JwtUserPayload from '../../../../libs/common/src/dto/common/jwt.payload';
 import TelegramLoginRequest from '../dto/auth/request/telegram-login.request';
 import RegisterRequest from '../dto/auth/request/register.request';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Request } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -40,11 +45,20 @@ export class ApiGatewayAuthController {
   ) {}
 
   @ApiOperation({ summary: 'Register' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
   @Post('register')
   @ApiResponse({ type: LoginResponse })
   @HttpCode(200)
-  async register(@Body() dto: RegisterRequest) {
-    const result = await this.apiGatewayService.register(dto);
+  async register(
+    @Body() dto: RegisterRequest,
+    @UploadedFile('file') file: Express.Multer.File,
+    @Req() request: Request,
+  ) {
+    const result = await this.apiGatewayService.register(
+      { ...dto, profilePicture: file },
+      request,
+    );
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
     return result.data;
@@ -77,19 +91,27 @@ export class ApiGatewayAuthController {
   }
 
   @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
   @UseGuards(CheckTokenGuard)
   @ApiOperation({ summary: 'update profile' })
   @Post('update-profile')
+  @UseInterceptors(FileInterceptor('file'))
   @ApiResponse({ type: UpdateUserResponse })
   @HttpCode(200)
   async updateProfile(
     @Body() updateUserDto: UpdateProfileDto,
     @User() user: any,
+    @UploadedFile('file') file: Express.Multer.File,
+    @Req() request: Request,
   ) {
-    const result = (await this.apiGatewayService.updateProfile({
-      email: user.email,
-      ...updateUserDto,
-    })) as any;
+    const result = (await this.apiGatewayService.updateProfile(
+      {
+        email: user.email,
+        ...updateUserDto,
+        profilePicture: file,
+      },
+      request,
+    )) as any;
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
     return result.data;
@@ -101,10 +123,9 @@ export class ApiGatewayAuthController {
   @Get('self')
   @ApiResponse({ type: UpdateUserResponse })
   @HttpCode(200)
-  async getSelf(@Req() request: Request) {
-    const userData = request.headers['user'];
+  async getSelf(@User() user: JwtUserPayload) {
     const result = (await this.apiGatewayService.getProfile({
-      email: userData.email,
+      email: user.email,
     })) as any;
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);
@@ -117,13 +138,12 @@ export class ApiGatewayAuthController {
   @Patch('change-password')
   @HttpCode(200)
   async changePassword(
-    @Req() request: Request,
     @Body() data: ChangePasswordRequest,
+    @User() user: JwtUserPayload,
   ) {
-    const userData = request.headers['user'];
     const result = (await this.apiGatewayService.changePassword({
       ...data,
-      email: userData.email,
+      email: user.email,
     })) as any;
     if (!result.success)
       throw new HttpException(result.error.message, result.error.statusCode);

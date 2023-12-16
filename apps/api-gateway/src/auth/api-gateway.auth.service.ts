@@ -17,6 +17,8 @@ import SendTelegramCodeRequestMessageData from '../../../../libs/common/src/dto/
 import RegisterResponseMessageData from '../../../../libs/common/src/dto/auth-service/register/register.response';
 import { NotificationService } from '../notification/api-gateway.notification.service';
 import RegisterRequestMessageData from '../../../../libs/common/src/dto/auth-service/register/register.request';
+import FileService from '../files/file.service';
+import { Request } from 'express';
 
 const authQueue = 'auth_queue';
 const replyAuthQueue = 'auth_queue.reply';
@@ -27,11 +29,22 @@ export class ApiGatewayAuthService {
     private readonly rabbitProducer: RabbitProducerService,
     private readonly eventEmitter: EventEmitter2,
     private readonly notificationService: NotificationService,
+    private readonly fileService: FileService,
   ) {}
 
   async register(
-    dto: RegisterRequestMessageData,
+    dto: RegisterRequestMessageData & {
+      profilePicture?: Express.Multer.File;
+    },
+    request: Request,
   ): Promise<RMQResponseMessageTemplate<RegisterResponseMessageData>> {
+    if (dto.profilePicture) {
+      const [path, originalname] = await this.fileService.saveFile(
+        dto.profilePicture,
+      );
+      const pictureUrl = request.headers.host + '/static/' + originalname;
+      dto.profilePic = pictureUrl;
+    }
     const uuid = crypto.randomUUID();
     await this.rabbitProducer.produce({
       data: dto,
@@ -137,7 +150,20 @@ export class ApiGatewayAuthService {
     });
   }
 
-  async updateProfile(dto: UpdateUserRequestMessageData) {
+  async updateProfile(
+    dto: UpdateUserRequestMessageData & {
+      profilePicture?: Express.Multer.File;
+    },
+    request: Request,
+  ) {
+    if (dto.profilePicture) {
+      const [path, originalname] = await this.fileService.saveFile(
+        dto.profilePicture,
+      );
+      const pictureUrl = request.headers.host + '/static/' + originalname;
+      dto.profilePic = pictureUrl;
+    }
+
     const uuid = crypto.randomUUID();
     await this.rabbitProducer.produce({
       data: dto,

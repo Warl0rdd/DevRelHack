@@ -75,5 +75,4 @@ export class ApiGatewayWikiController {
             throw new HttpException(result.error.message, result.error.statusCode);
         return result.data;
     }
-
 }

@@ -19,6 +19,19 @@ import GetArticlesByTagsRequestMessageData
   from "@app/common/dto/wiki-service/get-articles-by-tags/get-articles-by-tags.request.message-data";
 import GetArticlesByTagsResponseMessageData
   from "@app/common/dto/wiki-service/get-articles-by-tags/get-articles-by-tags.response.message-data";
+import DeleteArticleRequestMessageData
+  from "@app/common/dto/wiki-service/delete-article/delete-article.request.message-data";
+import GetArticlesOnModerationRequestMessageData
+  from "@app/common/dto/wiki-service/get-articles-on-moderation/get-articles-on-moderation.request.message-data";
+import GetArticlesOnModerationResponseMessageData
+  from "@app/common/dto/wiki-service/get-articles-on-moderation/get-articles-on-moderation.response.message-data";
+import GetArticlesRequestMessageData from "@app/common/dto/wiki-service/get-articles/get-articles.request.message-data";
+import GetArticlesResponseMessageData
+  from "@app/common/dto/wiki-service/get-articles/get-articles.response.message-data";
+import GetArticlesByNameRequestMessageData
+  from "@app/common/dto/wiki-service/get-articles-by-name/get-articles-by-name.request.message-data";
+import GetArticlesByNameResponseMessageData
+  from "@app/common/dto/wiki-service/get-articles-by-name/get-articles-by-name.response.message-data";
 
 @Injectable()
 export class WikiService {
@@ -133,7 +146,7 @@ export class WikiService {
       Promise<RMQResponseMessageTemplate<GetArticlesByTagsResponseMessageData>> {
     let articles: Map<string, Article[]>;
     for (const tag of dto.tags) {
-      articles.set(tag, await Article.createQueryBuilder()
+      articles.set(tag, await Article.createQueryBuilder('articles')
           .select()
           .where(":tag = ANY(tags)", {tag: tag})
           .getMany());
@@ -144,5 +157,109 @@ export class WikiService {
         articles: articles
       }
     }
+  }
+
+  async deleteArticle(dto: DeleteArticleRequestMessageData): Promise<RMQResponseMessageTemplate<any>> {
+    return Article.createQueryBuilder('articles')
+        .delete()
+        .from(Article)
+        .where("id - :id", {id: dto.id})
+        .execute()
+        .then(() => {
+          return {
+            success: true,
+          }
+        })
+        .catch(err => {
+          return {
+            success: false,
+            error: {
+              message: err,
+              statusCode: 400
+            }
+          }
+        })
+  }
+
+  async getArticlesOnModeration(dto: GetArticlesOnModerationRequestMessageData):
+    Promise<RMQResponseMessageTemplate<GetArticlesOnModerationResponseMessageData>> {
+    let end = dto.start + dto.max
+    return ArticleOnModeration
+        .createQueryBuilder('on_moderation')
+        .select()
+        .where('id >= :start AND id <= :end', {start: dto.start, end: end})
+        .getMany()
+        .then(async (articles) => {
+          return {
+            success: true,
+            data: {
+              articles: articles,
+              total: await ArticleOnModeration.count()
+            }
+          }
+        })
+        .catch((err) => {
+          return {
+            success: false,
+            error: {
+              message: err,
+              statusCode: 400
+            }
+          }
+        })
+  }
+
+  async getArticles(dto: GetArticlesRequestMessageData):
+      Promise<RMQResponseMessageTemplate<GetArticlesResponseMessageData>> {
+    let end = dto.start + dto.max
+    return Article
+        .createQueryBuilder('articles')
+        .select()
+        .where('id >= :start AND id <= :end', {start: dto.start, end: end})
+        .getMany()
+        .then(async (articles) => {
+          return {
+            success: true,
+            data: {
+              articles: articles,
+              total: await ArticleOnModeration.count()
+            }
+          }
+        })
+        .catch((err) => {
+          return {
+            success: false,
+            error: {
+              message: err,
+              statusCode: 400
+            }
+          }
+        })
+  }
+
+  async getArticlesByName(dto: GetArticlesByNameRequestMessageData):
+      Promise<RMQResponseMessageTemplate<GetArticlesByNameResponseMessageData>> {
+     return Article
+         .createQueryBuilder('articles')
+         .select()
+         .where(':name IN title', {name: dto.name})
+         .getMany()
+         .then((articles) => {
+           return {
+             success: true,
+             data: {
+               articles: articles
+             }
+           }
+         })
+         .catch(err => {
+           return {
+             success: false,
+             error: {
+               message: err,
+               statusCode: 400
+             }
+           }
+         })
   }
 }

@@ -425,19 +425,79 @@ export class AuthService {
   async findUsers(
     dto: FindUsersRequestMessageData,
   ): Promise<RMQResponseMessageTemplate<FindUsersResponseMessageData>> {
-    const { take, skip, tags, position, query } = dto;
+    const {
+      take,
+      skip,
+      tags,
+      position,
+      query,
+      workExperienceMax,
+      workExperienceMin,
+    } = dto;
 
     const qb = UserEntity.createQueryBuilder('user');
     qb.leftJoinAndSelect('user.tags', 'tags');
+    qb.leftJoinAndSelect('user.workExperience', 'workExperience');
     if (tags) {
       qb.andWhere(``);
     }
     if (position) {
-      qb.andWhere(`position = :position`, { position });
+      qb.andWhere(`user.position = :position`, { position });
     }
     if (query) {
       qb.andWhere(`email ILIKE :query OR full_name ILIKE :query`, {
         query: `%${query}%`,
+      });
+    }
+    //     SELECT email,
+    // SUM(EXTRACT(EPOCH FROM COALESCE("endDate",NOW())) - EXTRACT(EPOCH FROM "startDate")) as duration  FROM auth_users
+    // LEFT JOIN work_experience ON work_experience.user_id = auth_users.id
+    // WHERE email='bjingi3@yandex.ru'
+    // GROUP BY email;
+    let usersWithRequiredExp: { email: string; duration: number }[] = [];
+    if (workExperienceMax || workExperienceMin) {
+      let havingStr = '';
+      if (workExperienceMax && workExperienceMin) {
+        havingStr = `HAVING COALESCE(SUM(EXTRACT(EPOCH FROM COALESCE("endDate",NOW())) - EXTRACT(EPOCH FROM "startDate")),0) * 1000   >= ${workExperienceMin}
+         AND COALESCE(SUM(EXTRACT(EPOCH FROM COALESCE("endDate",NOW())) - EXTRACT(EPOCH FROM "startDate")),0) * 1000   <= ${workExperienceMax}`;
+      }
+      if (workExperienceMax && !workExperienceMin) {
+        havingStr = `HAVING COALESCE(SUM(EXTRACT(EPOCH FROM COALESCE("endDate",NOW())) - EXTRACT(EPOCH FROM "startDate")),0) * 1000  <= ${workExperienceMax}`;
+      }
+      if (workExperienceMin && !workExperienceMax) {
+        havingStr = `HAVING COALESCE(SUM(EXTRACT(EPOCH FROM COALESCE("endDate",NOW())) - EXTRACT(EPOCH FROM "startDate")),0) * 1000   >= ${workExperienceMin}`;
+      }
+      usersWithRequiredExp = await UserEntity.query(`
+SELECT email,
+COALESCE(SUM(EXTRACT(EPOCH FROM COALESCE("endDate",NOW())) - EXTRACT(EPOCH FROM "startDate")),0) * 1000 
+as duration    FROM auth_users
+LEFT JOIN work_experience ON work_experience.user_id = auth_users.id
+GROUP BY email
+${havingStr};
+`);
+    }
+    if (
+      (workExperienceMax || workExperienceMin) &&
+      usersWithRequiredExp.length === 0
+    ) {
+      return {
+        success: true,
+        data: {
+          users: [],
+          take,
+          skip,
+          total: 0,
+        },
+      };
+    }
+    if (workExperienceMax) {
+      qb.andWhere(`email IN (:...emails)`, {
+        emails: usersWithRequiredExp.map((item) => item.email),
+      });
+    }
+    if (workExperienceMin) {
+      qb.andWhere(`email IN (:...emails)`, {
+        emails: usersWithRequiredExp.map((item) => item.email),
       });
     }
     qb.take(take);
@@ -449,6 +509,12 @@ export class AuthService {
       success: true,
       data: {
         users: result.map((user) => {
+          const {
+            workExpByPosition,
+            workExperience,
+            workExperienceTotalMilliseconds,
+            workExperienceTotalString,
+          } = this.getWorkExp(user);
           return {
             email: user.email,
             phoneNumber: user.phoneNumber,
@@ -459,6 +525,10 @@ export class AuthService {
             updated: user.updated,
             githubLink: user.githubLink,
             tags: user.tags ? user.tags.map((item) => item.name) : [],
+            workExpByPosition,
+            workExperience,
+            workExperienceTotalMilliseconds,
+            workExperienceTotalString,
           };
         }),
         take,

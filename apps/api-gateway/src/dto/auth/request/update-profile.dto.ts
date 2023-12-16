@@ -1,6 +1,7 @@
 import {
   IsBase64,
   IsDate,
+  IsEnum,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -9,6 +10,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { WorkExperienceDto } from './register.request';
+import { UserPosition } from '../../../../../../libs/common/src/enum/user.position.enum';
 
 export default class UpdateProfileDto {
   @IsString()
@@ -46,4 +48,10 @@ export default class UpdateProfileDto {
   @Type(() => WorkExperienceDto)
   @ValidateNested({ each: true })
   workExperience?: WorkExperienceDto[];
+
+  @ApiProperty({
+    enum: UserPosition,
+  })
+  @IsEnum(UserPosition)
+  position?: UserPosition;
 }

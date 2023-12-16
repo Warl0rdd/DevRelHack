@@ -54,22 +54,7 @@ export default class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
-  @ApiOperation({ summary: 'add multiple users' })
-  @Post('add-user-multiple')
-  @ApiResponse({ type: AddUserMultipleDto })
-  @HttpCode(201)
-  async addUserMultiple(@Body() addUserMultipleDto: AddUserMultipleDto) {
-    const result = (await this.userService.addUserMultiple(
-      addUserMultipleDto,
-    )) as any;
-    if (!result.success)
-      throw new HttpException(result.error.message, result.error.statusCode);
-    return result.data;
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
+  @UseGuards(CheckTokenGuard)
   @ApiOperation({ summary: 'block user' })
   @Post('block-user')
   @HttpCode(202)
@@ -80,7 +65,7 @@ export default class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
+  @UseGuards(CheckTokenGuard)
   @ApiOperation({ summary: 'unblock user' })
   @Post('unblock-user')
   @HttpCode(202)
@@ -91,7 +76,7 @@ export default class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(CheckTokenGuard, CheckRoleGuard(UserPosition.DEVREL))
+  @UseGuards(CheckTokenGuard)
   @ApiOperation({ summary: 'Update user' })
   @Patch('update-user')
   @HttpCode(202)

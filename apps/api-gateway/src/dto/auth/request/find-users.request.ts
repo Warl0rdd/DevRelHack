@@ -15,6 +15,12 @@ export default class FindUsersFilterQuery {
   @ApiPropertyOptional({ name: 'filter[query]' })
   query?: string;
 
+  @ApiPropertyOptional({ name: 'filter[workExperienceMin]' })
+  workExperienceMin?: number;
+
+  @ApiPropertyOptional({ name: 'filter[workExperienceMax]' })
+  workExperienceMax?: number;
+
   @ApiPropertyOptional({ name: 'filter[tags]' })
   tags?: string[];
 }

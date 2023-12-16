@@ -13,7 +13,7 @@ export class WorkExpByPosition {
 export default class GetUserResponseMessageData {
   fullName?: string;
 
-  birthday?: string;
+  birthday?: Date;
 
   phoneNumber?: string;
 

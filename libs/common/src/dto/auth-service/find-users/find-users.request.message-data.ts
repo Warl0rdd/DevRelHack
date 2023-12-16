@@ -6,4 +6,6 @@ export default class FindUsersRequestMessageData {
   position?: UserPosition;
   query?: string;
   tags?: string[];
+  workExperienceMin?: number;
+  workExperienceMax?: number;
 }

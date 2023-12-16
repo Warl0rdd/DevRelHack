@@ -1,49 +1,61 @@
 import {
   IsBase64,
   IsDate,
+  IsEnum,
   IsOptional,
   IsPhoneNumber,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { WorkExperienceDto } from './register.request';
+import { UserPosition } from '../../../../../../libs/common/src/enum/user.position.enum';
 
 export default class UpdateProfileDto {
   @IsString()
   @IsOptional()
-  @ApiProperty({ example: 'John' })
+  @ApiPropertyOptional({ example: 'John' })
   fullName?: string;
 
   // YYYY-MM-DD
   @IsDate()
   @IsOptional()
-  @ApiProperty({ example: '2000-01-01' })
+  @ApiPropertyOptional({ example: '2000-01-01' })
   birthday?: Date;
 
   @IsPhoneNumber()
   @IsOptional()
-  @ApiProperty({ example: '88005553535' })
+  @ApiPropertyOptional({ example: '88005553535' })
   phoneNumber?: string;
 
   @IsBase64()
   @IsOptional()
-  @ApiProperty({ example: 'some base64 profile pic string' })
+  @ApiPropertyOptional({ example: 'some base64 profile pic string' })
   profilePic?: string;
 
   @IsString()
   @IsOptional()
-  @ApiProperty()
+  @ApiPropertyOptional()
   githubLink?: string;
 
   @IsString({ each: true })
   @IsOptional()
-  @ApiProperty({ isArray: true })
+  @ApiPropertyOptional({ isArray: true })
   tags?: string[];
 
-  @ApiProperty({ type: WorkExperienceDto, isArray: true })
+  @ApiPropertyOptional({ type: WorkExperienceDto, isArray: true })
   @Type(() => WorkExperienceDto)
   @ValidateNested({ each: true })
   workExperience?: WorkExperienceDto[];
+
+  @ApiPropertyOptional({
+    enum: UserPosition,
+  })
+  @IsEnum(UserPosition)
+  @IsOptional()
+  position?: UserPosition;
+
+  @ApiPropertyOptional({ type: 'string', format: 'binary', required: true })
+  file?: Express.Multer.File;
 }

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
   IsEmail,
@@ -45,24 +45,26 @@ export default class RegisterRequest {
   @IsDateString()
   birthday: Date;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString()
+  @IsOptional()
   phoneNumber?: string;
 
   @ApiProperty({ enum: UserPosition })
   @IsEnum(UserPosition)
   position: UserPosition;
 
-  @ApiProperty()
-  @IsString()
-  profilePic?: string;
-
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString({ each: true })
+  @IsOptional()
   tags?: string[];
 
-  @ApiProperty({ type: WorkExperienceDto, isArray: true })
+  @ApiPropertyOptional({ type: WorkExperienceDto, isArray: true })
   @Type(() => WorkExperienceDto)
   @ValidateNested({ each: true })
+  @IsOptional()
   workExperience?: WorkExperienceDto[];
+
+  @ApiPropertyOptional({ type: 'string', format: 'binary', required: true })
+  file?: Express.Multer.File;
 }
